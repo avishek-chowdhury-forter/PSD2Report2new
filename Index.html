@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PSD2: Fraud Win Turned Revenue Leak — Forter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #005de8;
+      --blue-bright: #2A8BFF;
+      --blue-light: #DCEAFF;
+      --forter-gradient: linear-gradient(135deg, #005de8, #2A8BFF);
+      --ai-gradient: #f8fafc;
+      --black: #0d0d0d;
+      --muted: #5a6478;
+      --white: #ffffff;
+      --border: #e2e8f0;
+      --bg-subtle: #f8fafc;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px; font-weight: 400;
+      line-height: 1.75; color: var(--black);
+      background: var(--white);
+    }
+    /* ── NAV ── */
+    nav.top-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+    }
+    .nav-inner {
+      max-width: 1400px; margin: 0 auto;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      height: 64px; gap: 16px;
+    }
+    .nav-logo { display: flex; align-items: center; text-decoration: none; flex-shrink: 0; }
+    .nav-links { display: flex; gap: 0; list-style: none; flex: 1; justify-content: space-evenly; align-items: center; }
+    .nav-links li a {
+      display: flex; align-items: center; gap: 6px;
+      text-decoration: none; padding: 5px 8px; border-radius: 8px;
+      transition: background .15s;
+    }
+    .nav-links li a:hover,
+    .nav-links li a.active { background: var(--blue-light); }
+    .nav-links li a:hover .nav-num,
+    .nav-links li a.active .nav-num { color: var(--blue); }
+    .nav-links li a:hover .nav-label,
+    .nav-links li a.active .nav-label { color: var(--blue); }
+    .nav-num { font-size: 20px; font-weight: 600; color: var(--blue); line-height: 1; flex-shrink: 0; transition: color .15s; }
+    .nav-label { font-size: 10px; font-weight: 600; color: var(--muted); line-height: 1.3; max-width: 108px; transition: color .15s; }
+    .nav-hamburger { display: none; background: none; border: none; cursor: pointer; padding: 8px; color: var(--black); }
+    .nav-hamburger svg { display: block; }
+    /* ── MOBILE DRAWER ── */
+    .nav-drawer { display: none; position: fixed; inset: 0; z-index: 200; }
+    .nav-drawer.open { display: block; }
+    .nav-drawer-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
+    .nav-drawer-panel {
+      position: absolute; top: 0; right: 0; bottom: 0;
+      width: 280px; background: var(--white); padding: 24px;
+      overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+    }
+    .nav-drawer-close { align-self: flex-end; background: none; border: none; cursor: pointer; padding: 4px; margin-bottom: 16px; color: var(--black); }
+    .nav-drawer-panel a { display: block; padding: 10px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; transition: background .15s, color .15s; }
+    .nav-drawer-panel a:hover { background: var(--blue-light); color: var(--blue); }
+    /* ── LAYOUT ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+    section { padding: 80px 0; }
+    section.bg-light { background: var(--bg-subtle); }
+    section.bg-white { background: var(--white); }
+    section.bg-ai { background: var(--ai-gradient); }
+    #exec { padding: 72px 0 64px; }
+    #s1, #s3, #s5, #s8 { padding: 96px 0; }
+    #s2, #s4, #s6 { padding: 72px 0; }
+    #s7 { padding: 104px 0; }
+    /* ── HERO — report cover ── */
+    .hero {
+      background: linear-gradient(150deg, #002fa0 0%, #0050d0 40%, #1a7aee 100%);
+      padding: 36px 0 64px; overflow: hidden; position: relative;
+    }
+    .hero::after {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    .hero-inner { max-width: 1100px; margin: 0 auto; padding: 0 48px; position: relative; z-index: 1; }
+    .hero-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; }
+    .hero-meta-tag {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 4px 12px;
+    }
+    .hero-meta-sep { color: rgba(255,255,255,0.25); }
+    .hero-meta-date { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 500; }
+    .hero-body { display: grid; grid-template-columns: 1fr 300px; gap: 48px; align-items: end; }
+    .hero h1 {
+      font-size: 52px; font-weight: 700; line-height: 1.06;
+      color: #fff; margin-bottom: 20px; letter-spacing: -0.02em;
+    }
+    .hero-sub { font-size: 16px; color: rgba(255,255,255,0.7); line-height: 1.65; max-width: 500px; margin-bottom: 16px; }
+    .hero-byline { font-size: 12px; color: rgba(255,255,255,0.45); font-weight: 500; letter-spacing: 0.04em; margin-bottom: 48px; }
+    .hero-stats {
+      display: flex; flex-direction: column; gap: 10px; align-self: flex-end;
+    }
+    .hero-stat-item {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+      backdrop-filter: blur(8px); border-radius: 14px;
+      padding: 16px 24px; min-height: 104px;
+      display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 16px;
+    }
+    .hsc-num { font-size: 26px; font-weight: 700; color: #fff; line-height: 1; letter-spacing: -0.02em; }
+    .hsc-label { font-size: 11px; color: rgba(255,255,255,0.7); line-height: 1.4; }
+    /* ── SECTION OPENERS ── */
+    .section-opener { margin-bottom: 48px; }
+    .section-kicker {
+      display: flex; align-items: baseline; gap: 16px; margin-bottom: 12px;
+    }
+    .section-kicker-num {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--blue);
+    }
+    .section-kicker-line {
+      display: none;
+    }
+    .section-opener h2 { margin-bottom: 10px; }
+    .section-opener .section-sub { font-size: 16px; color: var(--muted); }
+    /* ── EYEBROWS ── */
+    .eyebrow {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--blue); background: var(--blue-light);
+      border-radius: 100px; padding: 5px 14px; margin-bottom: 20px;
+    }
+    .eyebrow-on-color {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--blue); background: #fff;
+      border-radius: 100px; padding: 5px 14px; margin-bottom: 20px;
+    }
+    .eyebrow-plain {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--blue); background: var(--blue-light);
+      border-radius: 100px; padding: 5px 14px; margin-bottom: 16px;
+    }
+    /* ── TYPOGRAPHY ── */
+    h2 { font-size: 36px; font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; }
+    h3 { font-size: 19px; font-weight: 600; line-height: 1.2; }
+    /* ── BODY TEXT ── */
+    .body-text { color: var(--muted); margin-bottom: 20px; font-size: 15px; }
+    .body-text strong { color: var(--black); }
+    /* ── BUTTONS ── */
+    .btn-pill-lg {
+      display: inline-block; background: var(--forter-gradient); color: #fff;
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px;
+      padding: 14px 32px; border-radius: 100px; text-decoration: none;
+      border: none; cursor: pointer; transition: opacity .2s;
+    }
+    .btn-pill-lg:hover { opacity: 0.88; }
+    .btn-cta-white {
+      display: inline-block; background: #fff; color: var(--blue);
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px;
+      padding: 13px 28px; border-radius: 100px; text-decoration: none;
+      border: none; cursor: pointer; transition: opacity .2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2); white-space: nowrap;
+    }
+    .btn-cta-white:hover { opacity: 0.92; }
+    /* ── EXEC GRID ── */
+    .exec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+    .exec-body p { color: var(--muted); margin-bottom: 20px; font-size: 15px; }
+    .exec-body strong { color: var(--black); }
+    .exec-callouts { display: none; }
+    /* Horizontal stat strip */
+    .exec-stat-strip {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      background: var(--bg-subtle); border: 1.5px solid var(--border);
+      border-radius: 16px; margin-top: 32px; overflow: hidden;
+    }
+    .exec-stat-strip-item {
+      padding: 28px 40px;
+      border-right: 1.5px solid var(--border);
+    }
+    .exec-stat-strip-item:last-child { border-right: none; }
+    .exec-strip-num { font-size: 44px; font-weight: 700; color: var(--blue); line-height: 1; letter-spacing: -0.03em; margin-bottom: 10px; }
+    .exec-strip-label { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    /* ── PSP QUESTIONS ── */
+    .psp-questions { border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 40px; }
+    .psp-q-header { background: linear-gradient(135deg, #005de8, #2A8BFF); padding: 28px 36px; }
+    .psp-q-title { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .psp-q-sub { font-size: 13px; color: rgba(255,255,255,0.6); margin: 0; }
+    .psp-q-list { }
+    .psp-q-item {
+      display: flex; align-items: flex-start; gap: 20px;
+      padding: 20px 36px; border-bottom: 1px solid var(--border);
+      background: var(--white);
+    }
+    .psp-q-item:last-child { border-bottom: none; }
+    .psp-q-num { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: 0.08em; flex-shrink: 0; padding-top: 2px; min-width: 24px; }
+    .psp-q-text { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0; }
+    .psp-q-text strong { color: var(--black); font-weight: 600; }
+    .psp-q-footer { font-size: 13px; color: var(--muted); font-style: italic; padding: 20px 36px; background: var(--bg-subtle); margin: 0; border-top: 1px solid var(--border); }
+    /* ── ISSUER BAR CHARTS ── */
+    .issuer-bars-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .issuer-country-block { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .icb-header { display: flex; align-items: center; gap: 8px; padding: 18px 20px 14px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
+    .icb-flag { font-size: 18px; }
+    .icb-name { font-size: 15px; font-weight: 700; color: var(--black); flex: 1; }
+    .icb-spread { font-size: 11px; font-weight: 600; color: var(--blue); background: var(--blue-light); border-radius: 100px; padding: 2px 8px; white-space: nowrap; }
+    .icb-bars { padding: 12px 20px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .icb-row { display: flex; align-items: center; gap: 10px; }
+    .icb-label { font-size: 12px; color: var(--muted); min-width: 108px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .icb-bar-wrap { flex: 1; display: flex; align-items: center; gap: 8px; }
+    .icb-bar { height: 10px; border-radius: 100px; flex-shrink: 0; transition: width 0.4s ease; }
+    .icb-bar.green { background: #16a34a; }
+    .icb-bar.blue { background: #2563eb; }
+    .icb-bar.red { background: #dc2626; }
+    .icb-pct { font-size: 12px; font-weight: 700; color: var(--black); white-space: nowrap; }
+    .icb-tbc { font-size: 10px; color: #94a3b8; font-weight: 400; }
+    @media (max-width: 900px) { .issuer-bars-wrap { grid-template-columns: 1fr; } }
+    /* ── QUOTE ── */
+    .quote-card {
+      background: #e8eef8; border: none;
+      border-radius: 16px; padding: 44px 48px;
+      position: relative; overflow: hidden;
+    }
+    .quote-card::before {
+      content: '\201C';
+      position: absolute; top: -10px; right: 36px;
+      font-size: 160px; line-height: 1; font-family: Georgia, serif;
+      color: rgba(0,45,140,0.08); pointer-events: none;
+    }
+    .quote-text { font-size: 20px; line-height: 1.65; color: var(--black); font-style: italic; font-weight: 400; margin-bottom: 20px; }
+    .case-quote {
+      font-size: 14px; color: var(--black); font-style: italic;
+      background: #e8eef8; border-radius: 10px;
+      padding: 16px 20px; margin-top: 20px; line-height: 1.7;
+      position: relative;
+    }
+    .quote-attr-name { font-size: 13px; font-weight: 700; color: var(--blue); }
+    .quote-attr-title { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    /* ── MARKET CARDS ── */
+    .market-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px; }
+    .market-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 22px 20px; }
+    .market-flag { font-size: 22px; margin-bottom: 8px; }
+    .market-name { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .market-rate { font-size: 34px; font-weight: 700; color: var(--blue); line-height: 1.1; letter-spacing: -0.02em; }
+    .market-rate.red { color: #dc2626; }
+    .market-rate.amber { color: #d97706; }
+    .market-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .bar-wrap { width: 100%; height: 5px; background: var(--blue-light); border-radius: 100px; margin-top: 8px; }
+    .bar-fill { height: 5px; border-radius: 100px; background: var(--forter-gradient); }
+    .bar-fill.red { background: linear-gradient(135deg, #f87171, #ef4444); }
+    .bar-fill.amber { background: linear-gradient(135deg, #fbbf24, #d97706); }
+    /* ── RATE BADGES ── */
+    .rate-badge { display: inline-block; font-weight: 600; font-size: 12px; padding: 2px 10px; border-radius: 100px; }
+    .rate-green { background: #d1fae5; color: #065f46; }
+    .rate-blue { background: var(--blue-light); color: var(--blue); }
+    .rate-red { background: #fee2e2; color: #991b1b; }
+    /* ── ISSUER TABLE ── */
+    .issuer-table { width: 100%; border-collapse: collapse; }
+    .issuer-table th { text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 16px; border-bottom: 1.5px solid var(--border); }
+    .issuer-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .issuer-table tr:last-child td { border-bottom: none; }
+    /* ── CHART ── */
+    .chart-container { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; padding: 28px 32px; }
+    .chart-legend { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .chart-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .chart-scroll-wrap svg { min-width: 600px; }
+    /* ── APPROACH CARDS ── */
+    .approach-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+    .approach-card {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 22px 20px;
+      display: flex; flex-direction: column;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .approach-card:hover { border-color: var(--blue); box-shadow: 0 6px 24px rgba(0,93,232,0.08); }
+    .approach-badge { width: 40px; height: 40px; border-radius: 10px; background: var(--forter-gradient); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; flex-shrink: 0; }
+    .approach-badge svg { width: 20px; height: 20px; }
+    .approach-num { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
+    .approach-card h3 { font-size: 14px; margin-bottom: 10px; }
+    .approach-body { font-size: 13px; color: var(--muted); margin-bottom: 12px; flex: 1; line-height: 1.65; }
+    .approach-con-wrap { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+    .approach-demerit-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: #dc2626; list-style: none; user-select: none; }
+    .approach-demerit-toggle::-webkit-details-marker { display: none; }
+    .approach-demerit-toggle::before { content: '▸'; font-size: 10px; transition: transform 0.2s; display: inline-block; }
+    details[open] .approach-demerit-toggle::before { transform: rotate(90deg); }
+    .approach-con { font-size: 12px; color: #dc2626; font-weight: 600; line-height: 1.6; margin-top: 10px; }
+    /* ── CASE STUDIES ── */
+    .case-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .case-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; }
+    .case-logo { min-height: 36px; display: flex; align-items: center; margin-bottom: 18px; }
+    .case-stats { display: flex; gap: 20px; margin-bottom: 18px; flex-wrap: wrap; }
+    .case-stat-num { font-size: 26px; font-weight: 700; color: var(--blue); line-height: 1.1; display: block; letter-spacing: -0.02em; }
+    .case-stat-label { font-size: 11px; color: var(--muted); }
+    .case-attr { margin-top: 10px; font-size: 12px; font-weight: 600; color: var(--blue); }
+    /* ── METRICS ── */
+    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 56px; }
+    .metric-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 22px 24px; }
+    .metric-tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); background: var(--blue-light); border-radius: 100px; padding: 3px 10px; margin-bottom: 10px; }
+    .metric-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .metric-body { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    .metric-highlight { font-size: 24px; font-weight: 700; color: var(--blue); margin-top: 10px; letter-spacing: -0.02em; }
+    .metric-card.star { border-color: var(--blue); background: #f0f5ff; }
+    /* ── MATURITY PYRAMID ── */
+    /* ── MATURITY STEPS ── */
+    .maturity-steps { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 0; }
+    .maturity-step { flex: 1; border-radius: 12px 12px 0 0; padding: 20px 16px 20px; display: flex; flex-direction: column; justify-content: flex-start; cursor: default; transition: filter .15s; }
+    .maturity-step:hover { filter: brightness(0.96); }
+    .maturity-step-1 { background: #f1f5f9; border: 1.5px solid #e2e8f0; min-height: 160px; }
+    .maturity-step-2 { background: #dce9fb; border: 1.5px solid #c3d9f7; min-height: 200px; }
+    .maturity-step-3 { background: #b8d0f7; border: 1.5px solid #8ab4f0; min-height: 245px; }
+    .maturity-step-4 { background: #5e96e8; border: 1.5px solid #3a78de; min-height: 290px; }
+    .maturity-step-5 { background: var(--blue); border: 1.5px solid #004bc0; min-height: 340px; box-shadow: 0 8px 28px rgba(0,93,232,0.28); }
+    .ms-level { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+    .maturity-step-1 .ms-level, .maturity-step-2 .ms-level { color: var(--muted); }
+    .maturity-step-3 .ms-level { color: #2a5bbf; }
+    .maturity-step-4 .ms-level, .maturity-step-5 .ms-level { color: rgba(255,255,255,0.75); }
+    .ms-name { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; }
+    .maturity-step-1 .ms-name, .maturity-step-2 .ms-name, .maturity-step-3 .ms-name { color: var(--black); }
+    .maturity-step-4 .ms-name, .maturity-step-5 .ms-name { color: #fff; }
+    .ms-desc { font-size: 11px; line-height: 1.55; }
+    .maturity-step-1 .ms-desc, .maturity-step-2 .ms-desc { color: var(--muted); }
+    .maturity-step-3 .ms-desc { color: #2a4a8a; }
+    .maturity-step-4 .ms-desc, .maturity-step-5 .ms-desc { color: rgba(255,255,255,0.82); }
+    .ms-stat { font-size: 13px; font-weight: 700; margin-top: auto; padding-top: 14px; }
+    .maturity-step-1 .ms-stat, .maturity-step-2 .ms-stat, .maturity-step-3 .ms-stat { color: var(--blue); }
+    .maturity-step-4 .ms-stat, .maturity-step-5 .ms-stat { color: #fff; }
+    .maturity-axis { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px 0; margin-bottom: 32px; }
+    .maturity-axis-label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .maturity-axis-line { flex: 1; height: 2px; background: linear-gradient(to right, #e2e8f0, var(--blue)); margin: 0 12px; border-radius: 2px; }
+    .maturity-note { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
+    /* ── STATS INLINE ── */
+    .stats-inline { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; padding: 40px 0; margin-bottom: 40px; }
+    .stats-inline .stat-num { color: var(--blue); }
+    .stats-inline .stat-label { color: var(--muted); }
+    .stats-inline .stat-item { border-right: 1px solid var(--border); }
+    .stats-inline .stat-item:last-child { border-right: none; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; text-align: center; }
+    .stat-item { padding: 16px 32px; }
+    .stat-num { font-size: 48px; font-weight: 700; color: #fff; line-height: 1.05; display: block; letter-spacing: -0.02em; }
+    .stat-label { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 6px; display: block; }
+    /* ── CTA / NEXT STEPS ── */
+    .cta-banner { background: var(--forter-gradient); padding: 80px 0; }
+    .cta-banner h2 { color: #fff; margin-bottom: 8px; }
+    .cta-banner-sub { color: rgba(255,255,255,0.8); font-size: 16px; margin-bottom: 48px; }
+    .next-steps { display: flex; flex-direction: column; gap: 0; width: 100%; }
+    .step-card {
+      display: grid; grid-template-columns: 72px 1fr auto;
+      align-items: center; gap: 28px;
+      background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 0; padding: 32px 40px; width: 100%;
+      border-bottom: 1px solid rgba(255,255,255,0.1); transition: background .2s;
+    }
+    .step-card:first-child { border-radius: 16px 16px 0 0; }
+    .step-card:last-child { border-radius: 0 0 16px 16px; border-bottom: 1.5px solid rgba(255,255,255,0.15); }
+    .step-card:hover { background: rgba(255,255,255,0.14); }
+    .step-num { font-size: 40px; font-weight: 700; color: rgba(255,255,255,0.18); line-height: 1; text-align: center; letter-spacing: -0.02em; }
+    .step-content h3 { font-size: 17px; margin-bottom: 6px; color: #fff; }
+    .step-content p { font-size: 13px; color: rgba(255,255,255,0.72); margin: 0; max-width: 560px; line-height: 1.65; }
+    .step-cta-wrap { flex-shrink: 0; }
+    /* ── FOOTER ── */
+    footer { background: #09090b; }
+    .footer-bottom { padding: 40px 0; font-size: 11px; color: #52525b; line-height: 1.9; }
+    /* ── CALLOUT BOXES ── */
+    .callout { background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 14px; padding: 28px 32px; margin-bottom: 40px; }
+    .callout.blue-tint { background: var(--blue-light); border-color: #c7d9f9; }
+    .callout h3 { font-size: 15px; margin-bottom: 10px; }
+    .callout p, .callout li { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .callout ol { padding-left: 20px; }
+    .callout ol li { margin-bottom: 6px; }
+    .callout-solid { background: var(--blue); border-radius: 14px; padding: 22px 28px; }
+    .callout-solid p { color: #fff; font-size: 14px; margin: 0; line-height: 1.7; }
+    /* ── SECTION HEADER (legacy compat) ── */
+    .section-header { margin-bottom: 40px; }
+    .section-header h2 { margin-bottom: 8px; }
+    .section-header p { font-size: 15px; color: var(--muted); }
+    /* ── SIDEBAR NAV (removed) ── */
+    .side-nav { display: none; }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) {
+      .approach-grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .pyramid-tier-1 { width: 40%; }
+      .pyramid-tier-2 { width: 55%; }
+      .pyramid-tier-3 { width: 70%; }
+      .pyramid-tier-4 { width: 85%; }
+    }
+    @media (max-width: 900px) {
+      .exec-grid, .case-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .stat-item { border-right: none !important; border-bottom: 1px solid rgba(0,0,0,0.06); }
+      .approach-grid-4 { grid-template-columns: 1fr 1fr; }
+      .step-card { grid-template-columns: 56px 1fr; }
+      .step-cta-wrap { grid-column: 1 / -1; text-align: center; }
+      h2 { font-size: 28px; }
+      section { padding: 64px 0; }
+      .nav-links { display: none; }
+      .nav-hamburger { display: block; }
+      .hero-body { grid-template-columns: 1fr; }
+      .hero-stats { border-radius: 12px; margin-top: 24px; display: flex; flex-direction: row; }
+      .hero-stat-item { flex: 1; border-bottom: none; border-right: 1px solid rgba(255,255,255,0.08); }
+      .hero-stat-item:last-child { border-right: none; }
+      .pyramid-tier-1 { width: 60%; }
+      .pyramid-tier-2 { width: 72%; }
+      .pyramid-tier-3 { width: 84%; }
+    }
+    @media (max-width: 900px) {
+      .exec-stat-strip { grid-template-columns: 1fr; }
+      .exec-stat-strip-item { border-right: none !important; border-bottom: 1.5px solid var(--border); padding: 24px 28px !important; }
+      .exec-stat-strip-item:last-child { border-bottom: none; }
+      .maturity-steps { flex-direction: column; gap: 8px; align-items: stretch; }
+      .maturity-step { min-height: auto !important; border-radius: 12px; padding: 16px 20px; }
+      .maturity-axis { display: none; }
+    }
+    @media (max-width: 480px) {
+      section { padding: 48px 0; }
+      .container { padding: 0 20px; }
+      .hero-inner { padding: 0 20px; }
+      nav.top-nav { padding: 0 16px; }
+      .approach-grid-4 { grid-template-columns: 1fr; }
+      .market-grid { grid-template-columns: 1fr; }
+      .step-card { grid-template-columns: 1fr; padding: 24px 20px; }
+      .step-num { font-size: 28px; text-align: left; }
+      .hero-stats { flex-direction: column; }
+      .hero-stat-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+      .metrics-grid { grid-template-columns: 1fr; }
+      h2 { font-size: 24px; }
+      .issuer-bars-wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<!-- ═══ MOBILE DRAWER ═══ -->
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-overlay" id="drawerOverlay"></div>
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="drawerClose" aria-label="Close menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <a href="#exec" onclick="closeDrawer()">Executive Summary</a>
+    <a href="#s1" onclick="closeDrawer()">01 Compliance Comfort Zone</a>
+    <a href="#s2" onclick="closeDrawer()">02 Revenue Leak Revealed</a>
+    <a href="#s3" onclick="closeDrawer()">03 Why We Don't See It</a>
+    <a href="#s4" onclick="closeDrawer()">04 Mapping the Leak</a>
+    <a href="#s5" onclick="closeDrawer()">05 Why Approaches Fall Short</a>
+    <a href="#s6" onclick="closeDrawer()">06 Merchants Who Optimise</a>
+    <a href="#s7" onclick="closeDrawer()">07 Optimisation Framework</a>
+    <a href="#s8" onclick="closeDrawer()">08 Looking Ahead to PSD3</a>
+  </div>
+</div>
+<!-- ═══ TOP NAV ═══ -->
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="#">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 48.62" height="26" aria-label="Forter"><defs><style>.cls-1{fill:#005de8;}</style></defs><g><g><polygon class="cls-1" points="172.25 1.67 132.16 1.67 130.88 12.77 144.59 12.77 140.62 47.37 153.29 47.37 157.26 12.77 170.97 12.77 172.25 1.67"/><polygon class="cls-1" points="185 29.35 206.94 29.35 208.08 19.36 186.14 19.36 186.94 12.44 211.16 12.44 212.4 1.67 175.64 1.67 170.39 47.37 207.48 47.37 208.71 36.6 184.16 36.6 185 29.35"/><path class="cls-1" d="M252.33,6.63c-2.71-3.14-7.33-5-14.32-5H216.4l-5.25,45.7h12.67l1.59-13.84H231l7.61,13.84H253.2l-9.08-15.93c6-2.42,10.21-7,11-14v-.13C255.67,12.77,254.7,9.24,252.33,6.63Zm-10,11.42,0,.13c-.38,3.33-3.1,5.42-7.41,5.42h-8.36l1.27-11h8.29C240.34,12.64,242.74,14.46,242.33,18.05Z"/><path class="cls-1" d="M60.07,39.78a26.21,26.21,0,0,0,3.45-4.91,19.16,19.16,0,0,0,2-5.31,12.26,12.26,0,0,0-.07-5.87,7.78,7.78,0,0,0-3.7-4.62A12.11,12.11,0,0,0,54,18a23.71,23.71,0,0,0-9.2,3.65c-.87.56-1.7,1.17-2.51,1.81a1.91,1.91,0,0,0-.51.85c-.13.75-.24,1.5-.31,2.25v0c0,.27.07,1.19.53.74l.07-.06a23.84,23.84,0,0,1,3.75-3A18.44,18.44,0,0,1,53,21.4a9.37,9.37,0,0,1,6,.84,6,6,0,0,1,2.87,3.6,9.5,9.5,0,0,1,.06,4.56,15.21,15.21,0,0,1-1.54,4.12,20.86,20.86,0,0,1-2.68,3.82,23.92,23.92,0,0,1-3.1,2.93,23.24,23.24,0,0,1-3.25,2.12,18.16,18.16,0,0,1-2.43,1.08h0s-.87.39-.44.86a14.1,14.1,0,0,0,1.75,1.18,1.83,1.83,0,0,0,1.69-.23,28.61,28.61,0,0,0,4.18-2.73A29.12,29.12,0,0,0,60.07,39.78Z"/><path class="cls-1" d="M75.43,2.12c-5.4-3.08-12-2.69-18,.41h0l-.13.07c-.57.34.14.33.14.33h0c5-1,9.78-1.44,15.22,1,6.6,3.18,9.44,10.21,10.63,15.89h0s.62,1.42,1.06.05C84.48,12.29,81.39,5.5,75.43,2.12Z"/><path class="cls-1" d="M70.93,6.57c-4.87-2.64-12.6-1.78-18.43-.33a3.63,3.63,0,0,0-1.23.67c-.55.52-1.09,1-1.61,1.62-.08.11-.61.8.1.61h0c6.31-1.77,14-2.43,18.45,0,6.47,3.54,8.34,9.83,8,16.6s-3.1,13.43-6.9,19.16h0s-.28.69.24.4a25.44,25.44,0,0,0,3-2.1,19,19,0,0,0,1.31-1.66,36.32,36.32,0,0,0,5.9-18C79.94,16.46,77.64,10.2,70.93,6.57Z"/><path class="cls-1" d="M72.59,27.35a17.51,17.51,0,0,0-.42-8A11.39,11.39,0,0,0,67.1,13c-3-1.86-7-2.28-10.59-1.94a33.69,33.69,0,0,0-11,3.16l-.06.1c-.26.46-.52.93-.76,1.41l-.06.12c-.11.21-.2.43-.3.64s-.17.71.57.36h0a30.06,30.06,0,0,1,9.78-3c3.18-.35,6.68,0,9.35,1.63a9.87,9.87,0,0,1,4.41,5.66,16,16,0,0,1,.26,7.29,26.5,26.5,0,0,1-2.24,7,38.92,38.92,0,0,1-4.26,7,46.68,46.68,0,0,1-4.81,5.34h0l-.08.06-.39.38c-.16.19-.23.38,0,.43a18.4,18.4,0,0,0,2.23,0v0A2.31,2.31,0,0,0,60.61,48a49.68,49.68,0,0,0,4.88-5.39A41,41,0,0,0,70.18,35,27.93,27.93,0,0,0,72.59,27.35Z"/><path class="cls-1" d="M51.73,39.8A15.65,15.65,0,0,0,54,38.33a16.7,16.7,0,0,0,2.16-2A14.7,14.7,0,0,0,58,33.64a11,11,0,0,0,1.07-2.86,6.79,6.79,0,0,0,0-3.17,4.24,4.24,0,0,0-2-2.5,6.54,6.54,0,0,0-4.19-.58,12.81,12.81,0,0,0-5,2,15.89,15.89,0,0,0-4.07,3.76,13,13,0,0,0-1.32,2.16,9.55,9.55,0,0,0-.7,1.83c0,.1-.06.2-.08.3a7.48,7.48,0,0,0,0,3.26,4.37,4.37,0,0,0,1.27,2.13,4.31,4.31,0,0,0,1.41.86,2.74,2.74,0,0,0,.4.15,7,7,0,0,0,2.32.25,9.37,9.37,0,0,0,2.34-.43A12.74,12.74,0,0,0,51.73,39.8ZM46.6,38.26a3.22,3.22,0,0,1-1.21-.68,2.89,2.89,0,0,1-.85-1.43,4.87,4.87,0,0,1,0-2.18,7.19,7.19,0,0,1,.52-1.43A9.11,9.11,0,0,1,46,31.09a10.61,10.61,0,0,1,2.73-2.52A8.47,8.47,0,0,1,52,27.26a4.3,4.3,0,0,1,2.81.39,2.88,2.88,0,0,1,1.34,1.67,4.47,4.47,0,0,1,0,2.12,6.94,6.94,0,0,1-.71,1.92,9.51,9.51,0,0,1-1.25,1.78,10.38,10.38,0,0,1-1.45,1.36,9.58,9.58,0,0,1-1.51,1,8.27,8.27,0,0,1-1.56.65,6.91,6.91,0,0,1-1.56.28A4.79,4.79,0,0,1,46.6,38.26Z"/><path class="cls-1" d="M50.75,34.89a3.76,3.76,0,0,0,.68-.44,4.62,4.62,0,0,0,.64-.61,3.91,3.91,0,0,0,.56-.79A3.37,3.37,0,0,0,53,32.2a2,2,0,0,0,0-1,1.28,1.28,0,0,0-.6-.75,1.76,1.76,0,0,0-.91-.2,1.66,1.66,0,0,0-.32,0,4,4,0,0,0-1.49.58A5,5,0,0,0,48.41,32a3.59,3.59,0,0,0-.4.64,3.07,3.07,0,0,0-.23.64,2.12,2.12,0,0,0,0,1,1.22,1.22,0,0,0,.37.64,1.43,1.43,0,0,0,.55.31,2.15,2.15,0,0,0,.67.07,2.79,2.79,0,0,0,.7-.13A3.48,3.48,0,0,0,50.75,34.89Z"/><polygon class="cls-1" points="16.64 12.77 40.54 12.77 41.81 1.67 5.25 1.67 0 47.37 12.67 47.37 14.54 31.05 36.15 31.05 37.36 20.54 15.75 20.54 16.64 12.77"/><path class="cls-1" d="M126.16,6.63c-2.71-3.14-7.33-5-14.32-5H90.23L85,47.37H97.65l1.59-13.84h5.55l7.62,13.84H127L118,31.44c-6-2.42,10.21-7,11-14l0-.13C129.5,12.77,128.54,9.24,126.16,6.63Zm-10,11.42,0,.13c-.38,3.33-3.1,5.42-7.41,5.42h-8.36l1.26-11h8.29C114.18,12.64,116.58,14.46,116.17,18.05Z"/><path class="cls-1" d="M266,8.34a1.78,1.78,0,0,0,.52-.28,1.86,1.86,0,0,0,.48-.52,1.72,1.72,0,0,0,.26-.78,1.4,1.4,0,0,0-.41-1.25,1.75,1.75,0,0,0-1.21-.46h-2.26l-.63,5.51h.9l.24-2.11h.81l1.15,2.11h1.1l-1.19-2.15Zm.34-1.58a.85.85,0,0,1-.35.61,1.06,1.06,0,0,1-.64.24H264l.2-1.75h1.36a.85.85,0,0,1,.58.25A.73.73,0,0,1,266.31,6.76Z"/><path class="cls-1" d="M269.79,5.8a4.36,4.36,0,0,0-.91-1.65,4.14,4.14,0,0,0-1.52-1.1,4.81,4.81,0,0,0-2-.41,5.42,5.42,0,0,0-2.07.41,6.13,6.13,0,0,0-3.08,2.75,5.74,5.74,0,0,0-.64,2,5,5,0,0,0,.17,2,4.56,4.56,0,0,0,.93,1.65,4.37,4.37,0,0,0,1.52,1.11,4.69,4.69,0,0,0,2,.4,5.54,5.54,0,0,0,2.08-.4A5.89,5.89,0,0,0,268,11.5a6.32,6.32,0,0,0,1.3-1.65,5.54,5.54,0,0,0,.63-2A4.72,4.72,0,0,0,269.79,5.8Zm-.68,2a4.52,4.52,0,0,1-.53,1.68A5,5,0,0,1,266,11.82a4.43,4.43,0,0,1-1.72.34,3.88,3.88,0,0,1-1.66-.34,3.58,3.58,0,0,1-2-2.31,3.91,3.91,0,0,1-.14-1.68A4.45,4.45,0,0,1,261,6.14a5.09,5.09,0,0,1,2.56-2.31,4.65,4.65,0,0,1,1.74-.34,4.09,4.09,0,0,1,1.65.34,3.61,3.61,0,0,1,1.27.93A3.67,3.67,0,0,1,269,6.14,4.14,4.14,0,0,1,269.11,7.83Z"/></g></g></svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#exec"><span class="nav-num">00</span><span class="nav-label">Executive Summary</span></a></li>
+      <li><a href="#s1"><span class="nav-num">01</span><span class="nav-label">Compliance Comfort Zone</span></a></li>
+      <li><a href="#s2"><span class="nav-num">02</span><span class="nav-label">Revenue Leak Revealed</span></a></li>
+      <li><a href="#s3"><span class="nav-num">03</span><span class="nav-label">Why We Don't See It</span></a></li>
+      <li><a href="#s4"><span class="nav-num">04</span><span class="nav-label">Mapping the Leak</span></a></li>
+      <li><a href="#s5"><span class="nav-num">05</span><span class="nav-label">Why Approaches Fall Short</span></a></li>
+      <li><a href="#s6"><span class="nav-num">06</span><span class="nav-label">Merchants Who Optimise</span></a></li>
+      <li><a href="#s7"><span class="nav-num">07</span><span class="nav-label">Optimisation Framework</span></a></li>
+      <li><a href="#s8"><span class="nav-num">08</span><span class="nav-label">Looking Ahead to PSD3</span></a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburgerBtn" aria-label="Open menu">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</nav>
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-meta">
+      <span class="hero-meta-tag">EMEA Research Report · 2026</span>
+    </div>
+    <div class="hero-body">
+      <div>
+        <h1>PSD2: Fraud Win<br>Turned Revenue Leak</h1>
+        <p class="hero-sub">You've already approved these customers. Then 3DS loses them at the challenge, and the loss hides as checkout abandonment, not fraud.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat-item">
+          <span class="hsc-num">1 in 6</span>
+          <span class="hsc-label">Genuine customers in Europe fail or abandon 3DS (1 in 4 in Germany and Austria)</span>
+        </div>
+        <div class="hero-stat-item">
+          <span class="hsc-num">€57bn</span>
+          <span class="hsc-label">European checkout losses attributed to SCA friction</span>
+        </div>
+        <div class="hero-stat-item">
+          <span class="hsc-num">13×</span>
+          <span class="hsc-label">Revenue lost to friction vs. actual fraud</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══ EXEC SUMMARY ═══ -->
+<section class="bg-light" id="exec">
+  <div class="container">
+    <div class="section-opener">
+      <div class="section-kicker">
+        <span class="section-kicker-num">Executive Summary</span>
+        <span class="section-kicker-line"></span>
+      </div>
+      <h2 style="font-size:28px;font-weight:700;margin-bottom:0;line-height:1.2;">The compliance investment was justified.<br>The revenue leak is the next problem.</h2>
+    </div>
+    <div class="exec-body">
+        <p>PSD2 reduced card fraud. That part worked. European card-not-present (CNP) fraud fell by <strong>12% in 2021</strong> following SCA enforcement (ECB Report on Card Fraud, 2021). CNP fraud accounted for <strong>84% of all card fraud value</strong>. The regulation was aimed at the right target. The compliance investment was justified.</p>
+        <p>But the regulation created a second problem that most organisations are still not measuring. When customers you have already identified as trustworthy are sent through a 3DS authentication challenge, a significant proportion never come back. They fail, or they abandon. Across Europe, around one in six of these already-approved customers do not make it through, and in markets like Germany and Austria it climbs to nearly one in four. Because that drop-off occurs before the payment is submitted for authorisation, it never appears as a payments failure in your reporting. It gets logged as checkout abandonment. That looks like a marketing problem, or a UX problem. It is neither.</p>
+        <p>The merchants who have found that gap and closed it are seeing <strong>1–7% improvements in completion rates</strong>, sustained reduction in chargebacks, and stronger authorisation rates. All at the same time. GetYourGuide increased conversion rates by 1.22% and reduced chargebacks 5x simultaneously. ASOS reduced 3DS challenges by 83% and contained failure and abandonment to 3%. This is not a compliance project. It is a revenue recovery opportunity critical to business growth.</p>
+        <p>Across European merchants, five distinct levels of authentication maturity have emerged. Most are leaving significant revenue on the table. A small group are not. This report shows you which group you are in, and what closing the gap is worth.</p>
+        <p style="margin-bottom:0;">The cost of a failed authentication is not just the transaction. It is the customer. One negative experience in the checkout flow can end a relationship that took years of marketing spend to build.</p>
+    </div>
+    <div class="exec-stat-strip">
+      <div class="exec-stat-strip-item">
+        <div class="exec-strip-num">1–7%</div>
+        <div class="exec-strip-label">Completion rate improvement among the merchants getting authentication right.</div>
+      </div>
+      <div class="exec-stat-strip-item">
+        <div class="exec-strip-num">€460k</div>
+        <div class="exec-strip-label">Annual revenue recovered by a single luxury retailer after moving fraud decisioning upstream.</div>
+      </div>
+      <div class="exec-stat-strip-item">
+        <div class="exec-strip-num">93%</div>
+        <div class="exec-strip-label">Exemption rate one apparel merchant reached, up from 2.5%, lifting completion 1.7%.</div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ═══ S1 ═══ -->
+<section class="bg-white" id="s1">
+  <div class="container">
+    <div class="section-opener">
+      <div class="section-kicker">
+        <span class="section-kicker-num">01</span>
+        <span class="section-kicker-line"></span>
+      </div>
+      <h2 style="margin-bottom:10px;">The Compliance Comfort Zone</h2>
+      <p class="section-sub">How PSD2 reshaped fraud prevention in European ecommerce</p>
+    </div>
+    <p style="color:var(--muted);margin-bottom:20px;">PSD2 was built to modernise European payments and open the market to new players. Strong Customer Authentication was its answer to one specific problem: rising CNP fraud, which had reached <strong style="color:var(--black);">€1.87 billion in 2019</strong> (ECB Report on Card Fraud, 2020) and accounted for around 84% of total card fraud value. Something had to change.</p>
+    <p style="color:var(--muted);margin-bottom:20px;">By requiring customers to verify identity using two factors, regulators created a meaningful barrier to CNP fraud. After a phased rollout, full enforcement landed across most EEA markets by end of 2020, with some countries including Italy, Germany, and Ireland extending into 2021, and the UK following in March 2022. Once in place, it worked. There was a <strong style="color:var(--black);">12% decline in CNP fraud in 2021</strong> (ECB Report on Card Fraud, 2021). By 2024, card fraud was running at <strong style="color:var(--black);">ten times the rate</strong> for transactions with a counterpart outside the EEA, where SCA is not legally required, compared to within it (EBA/ECB Joint Report on Payment Fraud, 2024).</p>
+    <p style="color:var(--muted);margin-bottom:20px;">SCA enforcement did not eliminate fraud. It displaced it. As card payments became harder to exploit, fraudsters moved elsewhere. The EBA and ECB's 2025 Joint Payment Fraud Report documents a rise in social engineering schemes, impersonation scams, and authorised push payment fraud in the years following SCA enforcement. Forter's own network data tells a similar story: since PSD2 came into full effect across Europe, ATO attempts across its merchant base have risen <strong style="color:var(--black);">180%</strong>, gift card fraud <strong style="color:var(--black);">230%</strong>, and refund abuse including false INR claims more than <strong style="color:var(--black);">200%</strong>. PSD2 solved the problem it was designed to solve. The fraud landscape it created is a different conversation, and an important one. The problem this report addresses is not the fraud PSD2 pushed elsewhere. It is the revenue it cost merchants at the moment of authentication.</p>
+    <div style="background:var(--blue-light);border-radius:16px;padding:32px 36px;width:100%;margin:8px 0 28px;">
+      <h3 style="font-size:18px;margin-bottom:12px;">The liability shift</h3>
+      <p style="color:var(--muted);font-size:15px;margin:0;">When a transaction completes 3DS, fraud liability shifts from the merchant to the card issuer. That is a genuine benefit. But it created a measurement blind spot: the impact of authentication was measured only in terms of fraud prevention, and did not account for customers lost during the authentication process itself.</p>
+    </div>
+    <p style="color:var(--muted);margin-bottom:20px;">And so a reasonable default settled in. Authentication was handled. Card fraud was down. Remaining checkout losses were attributed to the usual suspects. Compliance was ticked. The work felt done.</p>
+    <p style="color:var(--muted);margin-bottom:40px;">It was not. Because something else was happening that the standard reporting could not see. It is still happening. This report shows you how far up that ladder your business sits, and what closing the gap is worth.</p>
+    <div style="margin: 40px 0; padding: 24px 32px; background: linear-gradient(135deg, #005de8, #2A8BFF); border-radius: 12px;">
+      <p style="font-size: 17px; font-weight: 600; color: #fff; line-height: 1.6; margin: 0;">The merchants operating at the highest levels of authentication maturity today did not wait for the next compliance deadline. They built a capability their competitors had not thought to measure.</p>
+    </div>
+  </div>
+</section>
+<!-- ═══ S2 ═══ -->
+<section class="bg-light" id="s2">
+  <div class="container">
+    <div class="section-opener">
+      <div class="section-kicker">
+        <span class="section-kicker-num">02</span>
+        <span class="section-kicker-line"></span>
+      </div>
+      <h2 style="margin-bottom:10px;">The Revenue Leak Revealed</h2>
+      <p class="section-sub">How authentication friction erodes checkout conversion</p>
+    </div>
+    <p style="color:var(--muted);margin-bottom:20px;">Every day, genuine customers abandon purchases during authentication. Not because they changed their mind. Not because of fraud. Because the process interrupted them at the worst possible moment and they did not come back.</p>
+    <p style="color:var(--muted);margin-bottom:20px;">A customer has spent time on your site. They have made a decision. They have added items to their basket, entered their card details, and clicked pay. They want this purchase. A screen appears from their bank. They need to open a banking app, find a one-time code, or navigate a redirect that looks nothing like your brand experience. On mobile, where over half of your transactions originate, it can be genuinely disruptive.</p>
+    <p style="color:var(--muted);margin-bottom:40px;">Sometimes families share cards and the person who gets the authentication request is not the one trying to buy. Sometimes the customer is not near their phone. Sometimes the OTP never arrives because their number is out of date at the bank. There are a dozen other reasons a genuine customer does not complete the challenge. None of them are fraud. You almost certainly never know they were there.</p>
+    <h3 style="margin-bottom:12px;font-size:20px;">Two types of loss, both hidden in standard reporting</h3>
+    <p style="color:var(--muted);margin-bottom:16px;">The drop-off has two distinct causes, and they require different fixes. The first is <strong style="color:var(--black);">customer abandonment</strong>: the customer sees the authentication challenge and gives up. The flow is too slow, too confusing, too unfamiliar. An experience and trust problem: better UX, push notifications, faster flows. The second is <strong style="color:var(--black);">technical failure</strong>: the authentication request times out, the redirect breaks, or the SDK fails on a specific device. An integration and infrastructure problem: flow rebuilds and cross-device testing.</p>
+    <p style="color:var(--muted);margin-bottom:16px;">Both result in the same outcome: the transaction never reaches authorisation. The Merchant Risk Council has documented that these transactions are categorised as checkout abandonment in most PSP reporting, indistinguishable from a customer who decided not to buy. When retries are attempted, they typically repeat the same authentication flow with no change in outcome. The underlying issue stays invisible, whether it is an issuer policy, a broken redirect, or a customer who has already left.</p>
+    <p style="color:var(--muted);margin-bottom:40px;">The merchants who have closed this gap share one characteristic: they stopped measuring authentication as a fraud metric and started measuring it as a revenue metric. Most of their competitors still have not made that switch.</p>
+    <div class="quote-card" style="margin-bottom:48px;">
+      <p class="quote-text">"Managing fraud is not just about blocking fraudsters. It's about ensuring your genuine customers aren't wrongly flagged or inconvenienced."</p>
+      <div class="quote-attr-name">Galit Shani-Michel</div>
+      <div class="quote-attr-title">VP Payments, Forter</div>
+    </div>
+    <h3 style="margin-bottom:12px;font-size:20px;">The scale of the hidden loss</h3>
+    <p style="color:var(--muted);margin-bottom:20px;">When SCA was introduced, 451 Research / Stripe projected it would cost European businesses up to <strong style="color:var(--black);">€57 billion</strong> in lost economic activity in its first year, roughly 10% of the region's online sales at the time (2019). The revenue leak was there from the very beginning.</p>
+    <p style="color:var(--muted);margin-bottom:20px;">The number most teams reach for is a blended 3DS success rate. It is the wrong number. A blended rate mixes the fraudsters you want to fail in with the genuine customers you cannot afford to lose, so a low figure tells you nothing about which is happening. And a fraudster who fails a challenge is a save, not a loss. The figure that actually matters is narrower, and far more uncomfortable: of the customers you have already identified as trustworthy, how many still fail or abandon the challenge?</p>
+    <p style="color:var(--muted);margin-bottom:40px;">In Forter's network, across roughly 723,000 approved-and-challenged transactions in Europe, around 1 in 6 of these known-good customers still fail or abandon the 3DS challenge. Broken down by market, the share runs to roughly 1 in 4 in Germany (24.5%) and Austria (25.5%), about 1 in 5 in Italy (21.8%) and Spain (20.0%), 1 in 6 in France (16.2%), and fewer than 1 in 14 in the UK (6.9%). Every one of those is revenue lost for no fraud benefit whatsoever. Markets have improved since the chaotic early days of SCA rollout. Analysis of regulated markets shows French frictionless authentication rose 40% in H1 2024 as more transactions qualified for exemptions (Stripe, 2024). But improvement is not the same as solved, and the gap between merchants who have invested in authentication infrastructure and those who have not remains large.</p>
+    <div class="stats-inline">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-num">1 in 4</span>
+          <span class="stat-label">Trusted customers who fail or abandon 3DS in Germany and Austria</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">6.9%</span>
+          <span class="stat-label">UK trusted-customer drop-off: the lowest in the EEA, and still a substantial leak</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">2–3.5%</span>
+          <span class="stat-label">Typical European conversion decline from poorly implemented 3DS</span>
+        </div>
+      </div>
+    </div>
+    <p style="color:var(--muted);margin-bottom:20px;">None of this friction is inevitable. High authentication rates do not damage conversion. Poor authentication implementation does.</p>
+    <p style="color:var(--muted);margin-bottom:40px;">The impact is not evenly distributed across transaction values. Abandonment rates on transactions above €100 are 8-15 percentage points higher than on low-value transactions, across major European issuers in Forter's network.</p>
+    <div style="margin: 40px 0; padding: 24px 32px; background: linear-gradient(135deg, #005de8, #2A8BFF); border-radius: 12px;">
+      <p style="font-size: 17px; font-weight: 600; color: #fff; line-height: 1.6; margin: 0;">The customers most likely to abandon during a 3DS challenge are also the ones making your highest-value purchases.</p>
+    </div>
+    <h3 style="margin-bottom:8px;font-size:20px;">Complete rate: the number you should be tracking</h3>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin:16px 0 24px;">
+      <div style="flex:1 1 280px;border:1px solid #e2e6ef;border-radius:12px;padding:20px 24px;background:#fff;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">What most merchants track</div>
+        <div style="font-size:16px;font-weight:700;color:var(--black);margin-bottom:10px;">Standard authorisation rate</div>
+        <p style="font-size:14px;color:var(--muted);margin:0;line-height:1.5;">Successful authorisations divided by <strong style="color:var(--black);">transactions submitted for authorisation</strong>.</p>
+      </div>
+      <div style="flex:1 1 280px;border:1px solid var(--blue);border-radius:12px;padding:20px 24px;background:var(--blue-light);">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;">The number that reveals the leak</div>
+        <div style="font-size:16px;font-weight:700;color:var(--black);margin-bottom:10px;">Complete rate</div>
+        <p style="font-size:14px;color:var(--muted);margin:0;line-height:1.5;">Successful transactions divided by <strong style="color:var(--black);">all transaction attempts</strong>, including those abandoned or failed during authentication.</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);">This is where the biggest opportunity cost lies, and why over-challenging stays hidden: flood transactions into 3DS and your authorisation rate can still look healthy while your complete rate quietly collapses, because trusted customers abandoned before they ever reached authorisation. Challenge only where it is genuinely needed and the same complete rate climbs. Complete rate is the number that separates a smart authentication strategy from an overdone one. Most merchants track only the first.</p>
+  </div>
+</section>
+<!-- ═══ S3 ═══ -->
+<section class="bg-white" id="s3">
+  <div class="container">
+    <div class="section-opener">
+      <div class="section-kicker">
+        <span class="section-kicker-num">03</span>
+        <span class="section-kicker-line"></span>
+      </div>
+      <h2 style="margin-bottom:10px;">Why We Don't See the Leak</h2>
+      <p class="section-sub">The authentication black box inside the payments ecosystem</p>
+    </div>
+    <p style="color:var(--muted);margin-bottom:20px;">If the problem is real and measurable, why do so few merchants know it is happening to them?</p>
+    <p style="color:var(--muted);margin-bottom:20px;">Authentication sits across four distinct parties: the merchant, the payment service provider (PSP), the card network, and the issuer. Each plays a role. None has a complete view. The issuer's Access Control Server makes the actual decision: frictionless flow, challenge, or decline. The merchant cannot see why challenges are triggered for specific customers, why one issuer accepts exemption requests and another systematically rejects them, or what is happening inside an individual bank's authentication infrastructure.</p>
+    <p style="color:var(--muted);margin-bottom:32px;">Soft decline codes are generic. They confirm a transaction was declined for authentication reasons. They do not tell you whether the issuer has a blanket policy against your transaction profile, whether its challenge flow breaks on mobile, whether there is a specific BIN range where your completion rate consistently collapses, or whether the customer themselves dropped out through frustration or confusion despite the technical flow working correctly. Most PSPs do not surface this level of detail in standard reporting, but merchants who ask for it directly can often access more granular breakdowns. The barrier is usually awareness, not availability. What that data will show you is the scale of the problem. What it will not show you is the issuer-level, real-time picture you need to do something about it.</p>
+    <div class="psp-questions">
+      <div class="psp-q-header">
+        <h3 class="psp-q-title">Five questions to ask your payment service provider (PSP) today</h3>
+        <p class="psp-q-sub">Most merchants have never asked their PSP for this level of detail. Start here.</p>
+      </div>
+      <div class="psp-q-list">
+        <div class="psp-q-item">
+          <span class="psp-q-num">01</span>
+          <p class="psp-q-text">Can you show me my <strong>complete rate</strong>: successful transactions divided by all transaction attempts, including those abandoned or failed before authorisation?</p>
+        </div>
+        <div class="psp-q-item">
+          <span class="psp-q-num">02</span>
+          <p class="psp-q-text">Can you break down my 3DS authentication failures by type: <strong>technical failure versus customer abandonment</strong>?</p>
+        </div>
+        <div class="psp-q-item">
+          <span class="psp-q-num">03</span>
+          <p class="psp-q-text">Can you show me my <strong>challenge success rate and abandonment rate by individual issuer BIN</strong>?</p>
+        </div>
+        <div class="psp-q-item">
+          <span class="psp-q-num">04</span>
+          <p class="psp-q-text">What is my <strong>exemption rejection rate</strong>, and are those rejections soft declines or hard declines?</p>
+        </div>
+        <div class="psp-q-item">
+          <span class="psp-q-num">05</span>
+          <p class="psp-q-text">Can you show me the difference in authentication success between <strong>mobile and desktop traffic</strong>?</p>
+        </div>
+      </div>
+      <p class="psp-q-footer">The answers will either show you a problem you did not know you had, or confirm that your PSP cannot answer these questions. Both are important signals.</p>
+    </div>
+    <div class="quote-card" style="margin-bottom:48px;">
+      <p class="quote-text">Once 3DS was configured with the PSP, nobody wanted to touch it. Nobody was entirely sure what was happening inside it. And so it ran, in the background, unmonitored and unoptimised.</p>
+    </div>
+    <h3 style="margin-bottom:12px;font-size:20px;">What the PSP is not showing you</h3>
+    <p style="color:var(--muted);margin-bottom:20px;">PSPs have limited incentive to surface authentication performance problems. They process transactions. They do not own your conversion rate. If customers are dropping off during authentication, those transactions never reach the authorisation layer. They never appear in the metrics the PSP reports to you. The data looks clean. Revenue is leaving and you cannot see why.</p>
+    <p style="color:var(--muted);margin-bottom:20px;">PSPs also charge per 3DS authentication attempt regardless of outcome, and have an incentive to maintain low fraud rates for their card network standing. Neither of those things aligns with reducing unnecessary challenges for merchants. This is compounded by the fact that many PSPs both control the 3DS execution and produce the reporting on it. They are marking their own homework. When merchants do push for answers, PSPs can conveniently point to the issuing bank. After all, it is the issuer's Access Control Server making the final decision. The issuer is inaccessible to the merchant. The PSP has plausible deniability. And in many cases the PSP genuinely lacks the granular data to differentiate between a timeout, a protocol failure, and a customer who simply gave up.</p>
+    <p style="color:var(--muted);margin-bottom:20px;">Most teams can quote their fraud loss and chargeback rates to the decimal. Almost none have an equally rigorous view of the good revenue they are turning away. Merchants reject around <strong style="color:var(--black);">6% of all e-commerce orders</strong>, and between <strong style="color:var(--black);">2% and 10%</strong> of those rejections are legitimate customers turned away, not fraud stopped (MRC Global Payments and Fraud Report, 2024). Research suggests merchants lose roughly <strong style="color:var(--black);">13 times more revenue</strong> to false declines and unnecessary friction than to fraud itself (Javelin Strategy &amp; Research). The friction costs more than the fraud.</p>
+    <p style="color:var(--muted);">The tools merchants rely on were designed to stop fraud and process payments. None of them were designed to answer the question that actually drives revenue recovery: given everything known about this customer and this issuer, right now, what is the optimal path through authentication?</p>
+  </div>
+</section>
+<!-- ═══ S4: MAPPING THE LEAK ═══ -->
+<section class="bg-light" id="s4">
+  <div class="container">
+    <div class="section-opener">
+      <div class="section-kicker">
+        <span class="section-kicker-num">04</span>
+        <span class="section-kicker-line"></span>
+      </div>
+      <h2 style="margin-bottom:10px;">Mapping the Leak</h2>
+      <p class="section-sub">Where authentication breaks down across issuers and markets</p>
+    </div>
+    <p style="color:var(--muted);margin-bottom:20px;">Many merchants assume issuers behave similarly enough to be treated the same way. A single authentication approach, applied uniformly, feels like the safe and simple choice. It is not. Leading merchants have learned that each issuer is its own problem to solve. Most are still treating them as one. How a bank built its 3DS infrastructure, whether it accepts exemptions or rejects them, whether its challenge flow works on mobile or breaks. All of it determines your conversion rate in that market. The data below shows what that looks like across Europe's major issuers.</p>
+    <p style="color:var(--muted);margin-bottom:40px;">Forter's network data shows a far more uneven picture than country averages suggest.</p>
+    <h3 style="margin-bottom:16px;font-size:20px;">Good-customer drop-off by market</h3>
+    <p style="color:var(--muted);margin-bottom:24px;">The figures below look only at <strong style="color:var(--black);">customers Forter had already scored as trustworthy</strong>, and show how many still fail or abandon the 3DS challenge. This is pure leak: revenue lost with no fraud benefit. We exclude risky traffic on purpose, because a fraudster failing a challenge is a save, not a loss. Blending the two is exactly why this loss stays invisible.</p>
+    <div class="market-grid">
+      <div class="market-card">
+        <div class="market-flag">🇦🇹</div>
+        <div class="market-name">Austria</div>
+        <div class="market-rate red">25.5%</div>
+        <div class="bar-wrap"><div class="bar-fill red" style="width:25.5%"></div></div>
+        <div class="market-sub">of trusted customers fail or abandon</div>
+      </div>
+      <div class="market-card">
+        <div class="market-flag">🇩🇪</div>
+        <div class="market-name">Germany</div>
+        <div class="market-rate red">24.5%</div>
+        <div class="bar-wrap"><div class="bar-fill red" style="width:24.5%"></div></div>
+        <div class="market-sub">of trusted customers fail or abandon</div>
+      </div>
+      <div class="market-card">
+        <div class="market-flag">🇮🇹</div>
+        <div class="market-name">Italy</div>
+        <div class="market-rate red">21.8%</div>
+        <div class="bar-wrap"><div class="bar-fill red" style="width:21.8%"></div></div>
+        <div class="market-sub">of trusted customers fail or abandon</div>
+      </div>
+      <div class="market-card">
+        <div class="market-flag">🇪🇸</div>
+        <div class="market-name">Spain</div>
+        <div class="market-rate red">20.0%</div>
+        <div class="bar-wrap"><div class="bar-fill red" style="width:20.0%"></div></div>
+        <div class="market-sub">of trusted customers fail or abandon</div>
+      </div>
+      <div class="market-card">
+        <div class="market-flag">🇫🇷</div>
+        <div class="market-name">France</div>
+        <div class="market-rate amber">16.2%</div>
+        <div class="bar-wrap"><div class="bar-fill amber" style="width:16.2%"></div></div>
+        <div class="market-sub">of trusted customers fail or abandon</div>
+      </div>
+      <div class="market-card">
+        <div class="market-flag">🇬🇧</div>
+        <div class="market-name">United Kingdom</div>
+        <div class="market-rate">6.9%</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:6.9%"></div></div>
+        <div class="market-sub">of trusted customers fail or abandon</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:0;margin-bottom:56px;">Figures show Forter-approved (known-good) transactions that were sent to a 3DS challenge and then failed or were abandoned, combining customer abandonment and technical failure. Nearly 1 in 4 trusted customers are lost at the challenge in Germany and Austria; the UK loses fewer than 1 in 14. Source: Forter network data, June 2026. Forter-approved transactions, with non-representative marketplace feeds excluded. n≈723,000 approved challenged transactions.</p>
+    <!-- ISSUER SPREAD — heading first, then chart in white box -->
+    <h3 style="margin-bottom:12px;font-size:20px;">Even the strongest issuers leak trusted customers</h3>
+    <p style="color:var(--muted);margin-bottom:20px;">Country averages are only the starting point. The bars below break that same group of <strong style="color:var(--black);">Forter-approved, trusted customers</strong> down by issuer, so a weak number can't be blamed on fraud. And not one issuer comes out clean. Even the strongest bank in each market still loses a real share of customers it had already approved. Sabadell loses 17% in Spain, Intesa 20% in Italy, N26 21% in Germany. The weakest, Advanzia, loses a third. That makes it a systemic leak, not a handful of bad banks.</p>
+    <p style="color:var(--muted);margin-bottom:28px;">When issuers do differ, it comes down to infrastructure. In Germany, the digital banks N26 (78.5%) and DZ Bank (77.5%) beat the traditional networks Sparkassen (69.3%) and Advanzia (67.3%) by around <strong style="color:var(--black);">11 points</strong>. That gap is about how each bank built its 3DS flows, not how big it is. Italy and Spain are bunched more tightly, just 4 to 5 points between strongest and weakest, and that tells the same story. The leak reaches every issuer, and it only grows once riskier traffic is added back in.</p>
+    <div class="issuer-bars-wrap">
+      <div class="issuer-country-block">
+        <div class="icb-header">
+          <span class="icb-flag">🇩🇪</span>
+          <span class="icb-name">Germany</span>
+          <span class="icb-spread">11pt spread</span>
+        </div>
+        <div class="icb-bars">
+          <div class="icb-row"><span class="icb-label">N26</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:78.5%"></div><span class="icb-pct">78.5%</span></div></div>
+          <div class="icb-row"><span class="icb-label">DZ Bank</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:77.5%"></div><span class="icb-pct">77.5%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Sparkassen</span><div class="icb-bar-wrap"><div class="icb-bar red" style="width:69.3%"></div><span class="icb-pct">69.3%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Advanzia</span><div class="icb-bar-wrap"><div class="icb-bar red" style="width:67.3%"></div><span class="icb-pct">67.3%</span></div></div>
+        </div>
+      </div>
+      <div class="issuer-country-block">
+        <div class="icb-header">
+          <span class="icb-flag">🇮🇹</span>
+          <span class="icb-name">Italy</span>
+          <span class="icb-spread">5pt spread</span>
+        </div>
+        <div class="icb-bars">
+          <div class="icb-row"><span class="icb-label">Intesa Sanpaolo</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:79.8%"></div><span class="icb-pct">79.8%</span></div></div>
+          <div class="icb-row"><span class="icb-label">UniCredit</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:78.4%"></div><span class="icb-pct">78.4%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Poste Italiane</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:77.5%"></div><span class="icb-pct">77.5%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Nexi Payments</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:76.6%"></div><span class="icb-pct">76.6%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Postepay</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:74.5%"></div><span class="icb-pct">74.5%</span></div></div>
+        </div>
+      </div>
+      <div class="issuer-country-block">
+        <div class="icb-header">
+          <span class="icb-flag">🇪🇸</span>
+          <span class="icb-name">Spain</span>
+          <span class="icb-spread">4pt spread</span>
+        </div>
+        <div class="icb-bars">
+          <div class="icb-row"><span class="icb-label">Banco Sabadell</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:83.0%"></div><span class="icb-pct">83.0%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Santander ES</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:81.8%"></div><span class="icb-pct">81.8%</span></div></div>
+          <div class="icb-row"><span class="icb-label">BBVA</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:81.1%"></div><span class="icb-pct">81.1%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Unnim Banc</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:80.3%"></div><span class="icb-pct">80.3%</span></div></div>
+          <div class="icb-row"><span class="icb-label">CaixaBank</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:79.0%"></div><span class="icb-pct">79.0%</span></div></div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:16px;margin-bottom:48px;">Source: Forter network data, June 2026. Forter-approved (trusted) segment, on the same basis as the market chart above (non-representative marketplace feeds excluded). DZ Bank combines both DZ entities. Green = 78%+. Blue = 70–78%. Red = below 70%.</p>
+    <p style="color:var(--muted);margin-bottom:48px;">The same leak widens on mobile. Across all major issuers in Forter's network, authentication success rates on mobile run 7-12 percentage points lower than on web. Crédit Agricole shows the largest gap: 70.8% on mobile versus 83.3% on web. Bank of Scotland runs at 75.8% versus 86.1%. This is not a customer behaviour problem. It is infrastructure.</p>
+    <h3 style="margin-bottom:12px;font-size:20px;">Abandonment versus technical failure: two different fixes</h3>
+    <p style="color:var(--muted);margin-bottom:16px;">The drop-off has two main causes a merchant can fix, and each needs a different response. It helps to see where the failures actually come from. Across Forter's network, most are issuer-side: <strong style="color:var(--black);">exemption rejection (27.8% of failures)</strong> and <strong style="color:var(--black);">issuer rejection (15.6%)</strong>, followed by <strong style="color:var(--black);">user abandonment (12.6%)</strong> and <strong style="color:var(--black);">technical failure (11.5%)</strong>. Abandonment and technical failure are close in size, but they call for completely different fixes, and the traditional German and Italian issuers like Sparkassen, Advanzia and Postepay tend to carry more of both.</p>
+    <p style="color:var(--muted);margin-bottom:16px;">Technical failure is mostly a structural problem at traditional German and Italian issuers. Many still run redirect-based 3DS, which pushes the customer out of the merchant's checkout and onto a bank-hosted page. Those flows were built for desktop browsers, so on mobile, in in-app browsers, or on a weak signal, they break. UK issuers mostly designed this out, investing in SDK-based and app-to-app flows during their longer SCA rollout window.</p>
+    <p style="color:var(--muted);">Abandonment is a different problem. The customer reaches the challenge screen and gives up, because the flow is too slow, too confusing, or too unfamiliar. You fix that with better UX, push-notification flows, and faster challenge completion, not the infrastructure rebuilds that solve technical failure.</p>
+  </div>
+</section>
+<!-- ═══ S5: APPROACHES — 4-across with badges ═══ -->
+<section class="bg-white" id="s5">
+  <div class="container">
+    <div class="section-opener">
+      <div class="section-kicker">
+        <span class="section-kicker-num">05</span>
+        <span class="section-kicker-line"></span>
+      </div>
+      <h2>Why Existing Approaches Fall Short</h2>
+      <p>Built for fraud. Not built for authentication.</p>
+    </div>
+    <p style="color:var(--muted);margin-bottom:40px;">Authentication friction sits in a gap between three systems: fraud prevention tools that operate before authorisation, the 3DS and SCA layer, and the payment authorisation layer that follows. No tool historically owned the optimisation of the middle layer.</p>
+    <div class="approach-grid-4">
+      <!-- Card 1 -->
+      <div class="approach-card">
+        <div class="approach-badge">
+          <!-- Shield / delegate icon -->
+          <svg viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 3L4 7v6c0 5 4 9 9 10 5-1 9-5 9-10V7L13 3z"/>
+          </svg>
+        </div>
+        <div class="approach-num">Approach 01</div>
+        <h3>Let the PSP decide</h3>
+        <p class="approach-body">Delegate all authentication decisions to the PSP. Simple, compliant, low overhead.</p>
+        <div class="approach-con-wrap">
+        <details>
+          <summary class="approach-demerit-toggle">Limitation</summary>
+          <p class="approach-con">No control over when and how 3DS is applied. Authentication is a black box. Optimisation is invisible. It is also disconnected from your fraud decisioning: a borderline transaction carries no risk signal into the authentication step, so it gets declined outright rather than stepped up to 3DS, where authentication could have saved the sale and shifted liability.</p>
+        </details>
+      </div>
+      </div>
+      <!-- Card 2 -->
+      <div class="approach-card">
+        <div class="approach-badge">
+          <!-- Lock / 3DS everything icon -->
+          <svg viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="12" width="16" height="11" rx="2"/>
+            <path d="M9 12V8a4 4 0 0 1 8 0v4"/>
+          </svg>
+        </div>
+        <div class="approach-num">Approach 02</div>
+        <h3>3DS everything</h3>
+        <p class="approach-body">Apply 3DS broadly to maximise compliance and shift fraud liability across all transactions.</p>
+        <div class="approach-con-wrap">
+        <details>
+          <summary class="approach-demerit-toggle">Limitation</summary>
+          <p class="approach-con">High challenge rates, significant abandonment, reduced conversion. Particularly acute in Germany, Spain, and Italy.</p>
+        </details>
+      </div>
+      </div>
+      <!-- Card 3 -->
+      <div class="approach-card">
+        <div class="approach-badge">
+          <!-- Zap / exempt icon -->
+          <svg viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 15 13 15 13 24 23 11 13 11 13 2"/>
+          </svg>
+        </div>
+        <div class="approach-num">Approach 03</div>
+        <h3>Exempt everything</h3>
+        <p class="approach-body">Apply for exemptions wherever possible to reduce friction and maximise frictionless flow.</p>
+        <div class="approach-con-wrap">
+        <details>
+          <summary class="approach-demerit-toggle">Limitation</summary>
+          <p class="approach-con">Issuers do not always soft-decline rejected exemptions. Sometimes they hard-decline outright. That loses a transaction a well-timed authentication would have saved, and it leaves an already-approved customer declined by their own bank, a worse experience than any challenge. It also runs separately from your fraud decisioning, so a borderline transaction that warrants a challenge is waved through on an exemption, or declined, instead of being routed to 3DS, the one path that could both verify the customer and shift liability. A nuanced strategy knows when not to exempt.</p>
+        </details>
+      </div>
+      </div>
+      <!-- Card 4 -->
+      <div class="approach-card">
+        <div class="approach-badge">
+          <!-- Sliders / rule-based icon -->
+          <svg viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="8" x2="22" y2="8"/><line x1="4" y1="14" x2="22" y2="14"/><line x1="4" y1="20" x2="22" y2="20"/>
+            <circle cx="9" cy="8" r="2.5" fill="#fff" stroke="none"/>
+            <circle cx="16" cy="14" r="2.5" fill="#fff" stroke="none"/>
+            <circle cx="11" cy="20" r="2.5" fill="#fff" stroke="none"/>
+          </svg>
+        </div>
+        <div class="approach-num">Approach 04</div>
+        <h3>Rule-based optimisation</h3>
+        <p class="approach-body">Use TRA and low-value exemptions with static thresholds. Some control, more visibility.</p>
+        <div class="approach-con-wrap">
+        <details>
+          <summary class="approach-demerit-toggle">Limitation</summary>
+          <p class="approach-con">Rules are based on historical patterns and cannot adapt to changing issuer behaviour or transaction-level nuance.</p>
+        </details>
+      </div>
+      </div>
+    </div>
+    <p style="color:var(--muted);margin-bottom:24px;">Most European merchants sit somewhere in that table. Leaders have moved beyond it entirely. The question is not which of these four approaches to choose. It is how to build the capability that makes the question obsolete.</p>
+    <p style="color:var(--muted);margin-bottom:24px;">The scale of exemption rejection is underappreciated. Of all authentication failures in Forter's network, exemption rejection is the single largest known failure category at 27.8% of failures, larger than technical failure at 11.5% and larger than user abandonment at 12.6%. When issuers reject exemption requests, many are not soft-declining. They are hard-declining outright, losing the transaction entirely. A blanket exemption strategy assumes issuers will play along. The data shows many do not.</p>
+    <p style="color:var(--muted);margin-bottom:24px;">A blanket strategy also stumbles on two execution choices most merchants never tune, and both decide whether an exemption is even accepted. The first is the processor. TRA exemption eligibility is not set at the merchant level. It is set at the acquirer level and gated by each PSP's own fraud rate. Under the RTS, you can exempt up to €100 only while the acquirer's fraud rate stays below 0.13%, up to €250 below 0.06%, and up to €500 below 0.01% (Commission Delegated Regulation (EU) 2018/389, Annex). So the band you can exempt into depends on your processor's standing, not your own clean record. And it tightens the moment that processor's fraud rate drifts up. If you are on a single processor when it does, every transaction above the new ceiling goes to 3DS immediately, however well optimised your strategy is. Merchants with more than one processor can route high-value transactions to whichever currently qualifies for the highest band. In Europe, that multi-processor capability is the difference between controlling your authentication outcomes and being at the mercy of someone else's risk policy.</p>
+    <p style="color:var(--muted);margin-bottom:24px;">The second is how the exemption is requested. An exemption can be sent through the 3DS rails, or sent directly to authorisation with no 3DS message at all (direct-to-authorisation, or DTA). The right choice is market-specific. In some markets, the UK clearest among them, DTA yields higher exemption acceptance and a cleaner, faster flow. In France the opposite is now true and mandatory: since May 2025 the Banque de France has required every exemption on a French-issued card to go through the 3DS rails, and any DTA transaction is systematically soft-declined. Applying one method uniformly across Europe leaves revenue on the table twice over: it under-performs where DTA would have won, and it loses transactions outright in France.</p>
+    <div style="margin: 8px 0 0; padding: 24px 32px; background: linear-gradient(135deg, #005de8, #2A8BFF); border-radius: 12px;">
+      <p style="font-size: 16px; font-weight: 600; color: #fff; line-height: 1.65; margin: 0;">Fraud prevention tools were designed to stop fraud, not reduce unnecessary challenges. Liability protection after authentication does not address friction during authentication. PSP routing tools improve authorisation rates, not authentication success rates. The gap is structural, not a failing of any particular approach. That gap is where the revenue leak lives.</p>
+    </div>
+  </div>
+</section>
+<!-- ═══ S6: CASE STUDIES with logo placeholders ═══ -->
+<section class="bg-light" id="s6">
+  <div class="container">
+    <div class="section-opener">
+      <div class="section-kicker">
+        <span class="section-kicker-num">06</span>
+        <span class="section-kicker-line"></span>
+      </div>
+      <h2>Merchants Who Optimise Authentication</h2>
+      <p>How leading merchants improve conversion without increasing risk</p>
+    </div>
+    <p style="color:var(--muted);margin-bottom:40px;">The revenue leak is recoverable. The merchants proving it are not operating at a different scale or with bigger teams. They have made one shift that most of their competitors have not: from treating authentication as a compliance obligation to treating it as a performance discipline. That shift is what separates the leaders from the rest.</p>
+    <!-- Case study cards -->
+    <div class="case-grid">
+      <div class="case-card">
+        <div class="case-logo">
+          <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 89 26" height="28" aria-label="ASOS"><defs><style>.st0{fill-rule:evenodd;}</style></defs><path class="st0" d="M61.5,19c-1.3,1.4-3,2.2-5.1,2.2s-3.8-.7-5.1-2.2c-1.3-1.4-2-3.6-2-6s.7-4.5,2-5.9c1.3-1.4,3.1-2.2,5.1-2.2,2,0,3.7.7,5.1,2.2,1.3,1.4,2,3.5,2,5.9s-.7,4.6-2,6ZM43.6,13c0,.1,0,.2,0,.3-2-1.9-5-2.6-6.8-2.9-3.3-.7-5.9-1.4-5.9-3.7s1.5-2.9,4.4-2.7c2.6.2,3.8,1.8,4.1,3.4,0,.3.2.4.5.4h4.8s0,0,0,0c-.7,1.6-1,3.3-1,5.2ZM35.5,21.7c-2.3,0-4.8-.8-5.4-4,0-.3-.2-.4-.4-.4h-4.6v-8.2c.6,2.4,2.6,4,6.9,5,2.9.7,7.9,1.1,7.9,4.1s-1.5,3.5-4.4,3.5ZM12.6,21.1c-3.7,0-7.1-2.9-7.1-8.2s2.5-8.1,7.1-8.1,7,.7,7,8.1-5.3,8.2-7,8.2h0ZM69.1,11c1.1,1.4,3,2.5,6,3.2,2.9.7,7.9,1.1,7.9,4.1s-1.5,3.5-4.4,3.5c-2.3,0-4.8-.8-5.4-4,0-.3-.2-.4-.4-.4h-4.3c.4-1.4.7-2.8.7-4.4,0-.7,0-1.3-.1-2ZM78.3,25.9c5.1,0,11.1-1.9,10.6-8.1-.5-5.5-6.2-6.9-9-7.4-3.3-.7-5.9-1.4-5.9-3.7s1.5-2.9,4.4-2.7c2.6.2,3.8,1.8,4.1,3.4,0,.3.2.4.5.4h4.8c.4,0,.5-.1.4-.4-.9-5.7-5.7-7.3-10.1-7.3s-9.6,1.2-10,6.7c0,.2,0,.4,0,.6-.7-1.5-1.7-2.8-3-4C62.6,1.2,59.7,0,56.4,0h-.1c-1.6,0-3.1.3-4.5.9-1.5.6-2.8,1.4-4,2.5-1.2,1.1-2.2,2.4-2.9,3.7-1-5.5-5.7-7.1-10-7.1s-8.8,1-9.8,5.4V1.1c0-.1,0-.2-.1-.3,0,0-.2-.1-.3-.1h-4.5c-.1,0-.2,0-.3.1,0,0-.1.2-.1.3v1.2c0,.2-.1.3-.3.2C17.9,1.2,15.5,0,12.7,0s-3.1.3-4.5.8c-1.4.6-2.7,1.4-4,2.5-1.4,1.3-2.5,2.7-3.2,4.3-.7,1.6-1.1,3.4-1.1,5.3s.3,3.5.9,5c.6,1.5,1.6,2.9,2.8,4.2,1.2,1.3,2.6,2.2,4.1,2.8,1.5.6,3.1.9,4.9.9,3,0,5.3-1.3,6.8-2.5.2-.1.3,0,.3.1v1.2c0,.2.2.4.4.4h4.5c.1,0,.2,0,.3-.1,0,0,.1-.2.1-.3v-4.2c2.1,5,7.5,5.2,10.1,5.2,4.4,0,9.5-1.4,10.5-5.8.5.7,1,1.4,1.6,2,2.4,2.4,5.5,3.7,9.1,3.8h.1c1.7,0,3.3-.3,4.8-1,1.5-.7,2.9-1.6,4.1-2.8.9-.9,1.6-1.9,2.2-3,1.6,6.4,7.7,6.7,10.6,6.7h0Z"/></svg>
+        </div>
+        <div class="case-stats">
+          <div><span class="case-stat-num">83%</span><span class="case-stat-label">reduction in 3DS challenge rate</span></div>
+          <div><span class="case-stat-num">3%</span><span class="case-stat-label">failure and abandonment rate</span></div>
+        </div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:16px;">ASOS was sending 100% of its EEA digital commerce transactions through 3DS to maintain PSD2 compliance. By building an exemption strategy informed by customer identity and issuer behaviour, ASOS reduced its 3DS challenge rate by 83%. Failure and abandonment was contained to 3%.</p>
+        <p class="case-quote">"Forter specialises in increasing conversion rates while complying with PSD2 — enabling us to reclaim revenue that would otherwise be lost to abandoned purchase processes."</p>
+        <p class="case-attr">Morgan McAlinden-Wall, Fraud Prevention Manager, ASOS</p>
+      </div>
+      <div class="case-card">
+        <div class="case-logo">
+          <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 382 302" height="36" aria-label="GetYourGuide"><defs><style>.gyg0{fill:#f53;}</style></defs><path class="gyg0" d="M98.3,125.5c-5.9,0-10.6,4.6-10.6,10.6s4.7,10.6,10.6,10.6,10.6-4.6,10.6-10.6-4.7-10.6-10.6-10.6ZM158.6,73.6h-37.4v-18h33.3v-18h-33.3v-17.7h36.8V1.8h-56.9v89.8h57.6v-18.1ZM117,127.8c5.9,0,10.6-4.6,10.6-10.6s-4.7-10.6-10.6-10.6-10.6,4.6-10.6,10.6,4.7,10.6,10.6,10.6ZM38.5,93.5c13,0,24.5-6.6,31.2-16.8v15h17.7v-49.9h-47.5v17.2h19.9c-1.8,9.2-10,16.4-19.8,16.4s-19.8-8.9-19.8-21.8v-13.3c0-12.7,9.5-22,22.8-22s19.6,5.7,22.6,13.9l18.7-6.5C79.2,9.8,62.5,0,43.2,0S.6,16.4.6,40.2v13.3c0,23,17,40,37.9,40ZM211.4,27.1h-19.9v28.7h19.9v-28.7ZM235.4,1.8h-68.1v18.1h68.1V1.8ZM33.8,195.9h20.2v-34.1l33.8-55.7h-22.8l-21.3,36.8-21-36.8H0l33.8,56v33.8ZM211.4,62.9h-19.9v28.7h19.9s0-28.7,0-28.7ZM364.9,195.9l-24.5-34.3c11.9-3.7,20.3-14.1,20.3-26.9s-13.4-28.5-30.4-28.5h-11.8v18.2h11.1c5.9,0,10.5,4.7,10.5,10.8s-4.6,10.8-10.5,10.8h-11.1v17.2l21.9,32.7h24.5ZM264.9,210.2h-29.6v89.9h29.6c27.8,0,47.5-19.1,47.5-44.9s-19.7-45-47.5-45h0ZM266.5,282.1h-11.1v-53.8h11.1c15,0,25.2,11.6,25.2,26.9s-10.2,26.8-25.2,26.8ZM344.6,264.1h33.3v-18h-33.3v-17.7h36.8v-18.1h-56.9v89.8h57.6v-18.1h-37.4v-18ZM312.5,165.5l-10.4-14.8,10.3-14.9-10.4-14.8,10.3-14.9h-20.8s-10.3,15.1-10.3,15.1l10.4,14.8-10.3,14.9,10.4,14.8-10.3,15,11.1,15.4h21l-11.3-15.5,10.3-15ZM266.5,161v-54.9h-20.1v55.2c0,10.3-7.4,18-17.5,18s-17.5-7.6-17.5-18v-55.2h-20.1v54.9c0,21.2,15.9,36.8,37.5,36.8s37.5-15.6,37.5-36.8ZM156.5,265.6c0,10.3-7.4,18-17.5,18s-17.5-7.6-17.5-18v-55.2h-20.1v54.9c0,21.2,15.9,36.8,37.5,36.8s37.5-15.6,37.5-36.8v-54.9h-20.1v55.2ZM40,267.4h19.9c-1.8,9.2-10,16.4-19.8,16.4s-19.8-8.9-19.8-21.8v-13.3c0-12.7,9.5-22,22.8-22s19.6,5.7,22.6,13.9l18.7-6.5c-5.2-15.7-21.9-25.6-41.2-25.6S.6,224.9.6,248.7v13.3c0,23,17,40,37.9,40s24.5-6.6,31.2-16.9v15h17.7v-49.9h-47.5s0,17.2,0,17.2Z"/><path class="gyg0" d="M132.1,104.3v18.9c14.8,0,26.4,12.1,26.4,27.8s-11.7,27.8-26.4,27.8-26.4-12.1-26.4-27.8h-20.7c0,26.2,20.9,46.7,47.1,46.7s47.1-20.5,47.1-46.7-20.9-46.7-47.1-46.7h0ZM214.6,252.6c3-2.7,8-7.2,8-15.4s-5-12.7-8-15.4c-.1-.1-.2-.2-.4-.3-1.5-1.6-1.7-3.8-1.8-4.9v-6.3h-20.2v8.4h0c0,.1,0,.2,0,.3,0,8.2,5,12.7,8,15.4,2.1,1.9,2.1,2,2.1,2.8s0,.9-2.1,2.8c-2.9,2.6-7.6,6.9-7.9,14.5h0c0,.1,0,.3,0,.4s0,.2,0,.2,0,.2,0,.2c0,.1,0,.3,0,.4h0c.4,7.7,5.1,11.9,7.9,14.5,2.1,1.9,2.1,2,2.1,2.8s0,.9-2.1,2.8c-3,2.7-8,7.2-8,15.4s0,.2,0,.3h0v8.4h20.2v-6.3c0-1.1.3-3.3,1.8-4.9.1-.1.2-.2.4-.3,3-2.7,8-7.2,8-15.4s-5-12.7-8-15.4c-1.9-1.7-2.1-2-2.1-2.6,0-.6.2-.9,2.1-2.6h0Z"/></svg>
+        </div>
+        <div class="case-stats">
+          <div><span class="case-stat-num">+1.22%</span><span class="case-stat-label">conversion rate</span></div>
+          <div><span class="case-stat-num">5x</span><span class="case-stat-label">chargeback reduction</span></div>
+          <div><span class="case-stat-num">72%</span><span class="case-stat-label">3DS exemption rate</span></div>
+        </div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:16px;">GetYourGuide, a global travel experiences marketplace operating across 170+ countries, partnered with Forter to replace static fraud rules with AI-powered identity intelligence. By combining Fraud Management and Payment Optimisation, Forter gave GetYourGuide the ability to dynamically apply 3DS where needed and exempt trusted customers where it is not, keeping the platform PSD2-compliant without adding checkout friction. The results: a 1.22% increase in conversion rate, a 5x reduction in chargeback rate, and a 72% 3DS exemption recommendation rate, reducing friction for trusted customers without impacting authorisation rates.</p>
+        <p class="case-quote">"Our goal is to ensure travelers trust our platform and enjoy a seamless experience, end-to-end, while supply partners can grow their businesses on our platform. Forter takes the time to understand the business problems global marketplaces face every day."</p>
+        <p class="case-attr">Gianmichele Zappia, Head of Fraud and Risk, GetYourGuide</p>
+      </div>
+      <div class="case-card">
+        <div class="case-logo">
+          <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 426.5 100" height="28" aria-label="Priceline"><defs><style>.pl0,.pl1{fill:#0068ef;}.pl1{fill-rule:evenodd;}</style></defs><g><g><path class="pl0" d="M385.8,45.1c0-2-.5-4.9-2.9-7.8-4.7-4.5-12.2-4.3-16.6.5h0c-2,2.5-2.5,4.9-2.9,7.8h22.5v-.5h-.1ZM402,66.2c-1.8,3-3.9,5.8-6.4,8.3-4.9,4.9-12.3,8.3-21.1,8.3-16.7,0-28.4-10.8-28.4-29.4s6.9-30.9,28.9-30.9,12.7,0,19.6,7.8c7.4,7.8,7.8,19.1,8.3,25.5h-40.2c0,6.9,3.9,13.7,12.7,13.7s12.3-5.9,14.7-9.8c.1,0,11.9,6.5,11.9,6.5ZM306.9,29.4c1.5-2,2.9-2.9,5.9-4.9,2.5-.5,5.9-1.5,9.8-1.5s7.4,0,9.8,2c6.4,3.4,7.8,8.3,7.8,17.2v38.2h-16.7v-40.2c-1.5-2.9-4.4-3.9-7.4-3.9-8.8,0-8.8,6.9-8.8,13.7v30.4h-16.7V24.5h16.7v4.9h-.4ZM279.9,9.8c0,4.9-3.9,9.3-8.8,9.3s-8.8-3.9-8.8-9.3,3.9-8.8,8.8-8.8,8.8,3.9,8.8,8.8ZM263.2,24.5h16.2v55.9h-16.2V24v.5ZM252,0v80.4h-16.7V0h16.7ZM210.8,45.1c0-2.5-.5-5.9-2.9-8.3-4.7-4.5-12.2-4.3-16.6.5h0c-2,2.5-2.5,4.9-2.9,7.8-.2,0,22.4,0,22.4,0ZM227.5,65.7c-1.9,3.2-4.2,6.2-6.9,8.8-4.9,4.9-12.3,8.3-21.1,8.3-16.7,0-28.4-10.8-28.4-29.4.5-13.2,7.4-30.9,29.9-30.9s12.7,0,19.6,7.8c7.8,7.8,7.8,19.1,8.3,25.5h-40.2c0,6.9,3.9,13.7,12.7,13.7s12.3-5.9,14.7-9.8l12.3,6.4-.9-.4ZM162.7,62.7l-1.5,2c-3.4,3.9-7.4,3.9-8.3,3.9-8.8,0-12.3-9.3-12.3-16.7s2.9-17.2,11.8-17.2,4.9,1,5.9,2c2.5,1.5,3.4,3.4,4.4,4.9,2-4.4,3.9-8.8,7.4-12.3-5-4.5-11.4-6.9-18.1-6.9-18.6,0-27.9,14.2-27.9,30.4,0,23,17.2,29.4,27.9,29.4s13.1-2.4,18.1-6.9c-3.4-3.4-5.7-7.6-6.9-12.3l-.5-.3ZM117.6,9.8c0,4.9-3.9,9.3-8.8,9.3s-8.8-3.9-8.8-9.3,3.9-8.8,8.8-8.8,8.8,3.9,8.8,8.8ZM100.5,24.5h16.2v55.9h-16.2V24v.5ZM77.5,29.9c3.4-2.9,7.4-5.4,16.2-6.4v14.7l-5.4,1c-7.8,1.5-10.3,2.5-10.3,9.8v31.4h-16.7V24h16.2v6.4-.5ZM27.5,35.3c-3.3,0-6.5,1.6-8.3,4.4-2.5,2.9-3.4,7.8-3.4,13.2s2,11.8,3.9,14.2c2,2,4.9,2.9,7.4,2.9,8.3-.5,12.3-9.3,12.3-18.1-.5-6.9-2.5-15.2-9.8-16.7h-2.6.5ZM14.7,29.9c0-1,1-1.5,1.5-2,2.9-2.9,7.8-4.9,14.2-4.9,13.7,0,24.5,10.3,24.5,29.4s-5.4,29.4-24.5,29.4-9.8-2.5-13.7-4.9v23H0V24.5h14.7v5.4Z"/><path class="pl1" d="M414.2,5.9c4.4,0,8.5,2.1,10.8,5.9,1,2,1.5,3.9,1.5,6.4s-.5,4.4-1.5,5.9c-3.2,6-10.6,8.2-16.6,5-2.1-1.1-3.8-2.9-5-5-1-1.5-1.5-3.4-1.5-5.9s.5-4.4,1.5-5.9c2.2-4,6.3-6.4,10.8-6.4ZM414.2,27.5c1.5,0,3.4-.5,4.9-1.5,2.7-1.7,4.3-4.7,4.4-7.8,0-3.3-1.9-6.4-4.9-7.8-1-1-2.5-1.5-4.4-1.5-3.3,0-6.4,1.9-7.8,4.9-1,1-1.5,2.9-1.5,4.9.3,4.9,4.4,8.8,9.3,8.8ZM419.1,16.2v2c-.5,1-1,1.5-2,1.5l2.5,3.9h-2.9l-1.5-3.4h-3.4v3.4h-2.5v-11.3h4.9c1.5,0,2.5,0,3.4,1,1,.4,1.5,1.4,1.5,2.9ZM412.3,18.1h2.5l1.5-.5v-3.5h-4.4v3.4l.4.6Z"/></g></g></svg>
+        </div>
+        <div class="case-stats">
+          <div><span class="case-stat-num">+1%</span><span class="case-stat-label">completion rate</span></div>
+          <div><span class="case-stat-num">−3.4%</span><span class="case-stat-label">bank declines</span></div>
+          <div><span class="case-stat-num">−25%</span><span class="case-stat-label">chargebacks</span></div>
+        </div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:16px;">Priceline's results challenge the underlying assumption that fraud prevention and conversion are in tension. By moving fraud decisioning to pre-authorisation, implementing Smart 3DS, and sharing richer transaction context with issuer partners, Priceline improved on both dimensions simultaneously. Completion rate up 1%. Bank declines down 3.4%. Chargebacks down 25%. All at the same time.</p>
+        <p class="case-quote">"If you're solely focused on preventing fraud without considering the impact on top-line conversion rate, you're leaving significant value on the table."</p>
+        <p class="case-attr">Marc Culver, VP Finance, Priceline</p>
+      </div>
+      <div class="case-card">
+        <div class="case-logo" style="font-size:13px;font-weight:600;color:var(--muted);">Three further examples from Forter's merchant network</div>
+        <div class="case-stats">
+          <div><span class="case-stat-num">+3.8%</span><span class="case-stat-label">completion rate (luxury retailer)</span></div>
+          <div><span class="case-stat-num">93%</span><span class="case-stat-label">exemption rate (apparel, up from 2.5%)</span></div>
+        </div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:12px;">A global travel merchant was running 3DS on 100% of transactions under fraud pressure. By linking fraud management, 3DS recommendation, and 3DS execution through a single decisioning layer, 3DS challenges dropped from 100% to 7% of transactions. Completion rate improved by 7%.</p>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:12px;">A large luxury retailer had its fraud decisioning running post-bank authorisation. Issuers were treating the merchant's traffic as higher-risk than it actually was. Moving the fraud decision upstream to pre-authorisation produced a 3.8% increase in completion rate and approximately €460,000 in yearly revenue uplift.</p>
+        <p style="font-size:14px;color:var(--muted);">A European apparel merchant whose PSP was achieving only a 2.5% exemption rate moved to an intelligent exemption strategy and reached 93% exemption of PSD2-eligible traffic, with a 1.7% increase in completion rates.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ═══ S7: FRAMEWORK ═══ -->
+<section class="bg-white" id="s7">
+  <div class="container">
+    <div class="section-opener">
+      <div class="section-kicker">
+        <span class="section-kicker-num">07</span>
+        <span class="section-kicker-line"></span>
+      </div>
+      <h2>The Authentication Optimisation Framework</h2>
+      <p>Turning authentication from compliance into a performance discipline</p>
+    </div>
+    <p style="color:var(--muted);margin-bottom:40px;">The merchants reclaiming the most revenue from authentication share one characteristic: they measure it. Not as a subset of fraud metrics, not buried in general checkout analytics. As a distinct discipline with its own KPIs, its own benchmarks, and clear internal ownership.</p>
+    <h3 style="margin-bottom:16px;">The metrics that matter</h3>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-tag">Volume</span>
+        <div class="metric-name">Challenge rate</div>
+        <p class="metric-body">What % of transactions are sent to 3DS challenge? High rates in markets and with issuers where challenge success is low compound the problem significantly.</p>
+      </div>
+      <div class="metric-card">
+        <span class="metric-tag">Experience</span>
+        <div class="metric-name">Frictionless rate</div>
+        <p class="metric-body">Of transactions sent to 3DS, what % pass without a visible challenge? This is your most direct lever on the leak: every trusted customer you exempt is one who never reaches a challenge they might have abandoned. In Europe it is driven by your exemption strategy, not issuer goodwill.</p>
+        <div class="metric-highlight">Your biggest lever on the leak</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-tag">Performance</span>
+        <div class="metric-name">Authentication success rate</div>
+        <p class="metric-body">Of all 3DS challenges, what % succeed? Watch it by market and by issuer BIN. A sharp drop in any single market or issuer is the signal to investigate, far more than a blended average.</p>
+        <div class="metric-highlight">Watch per-issuer, not blended</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-tag">Experience</span>
+        <div class="metric-name">Challenge abandonment rate</div>
+        <p class="metric-body">Of challenges presented, what % do customers abandon? Isolate trusted traffic first: high abandonment among already-approved customers is a UX problem, while some abandonment on risky traffic is simply fraud dropping out.</p>
+      </div>
+      <div class="metric-card">
+        <span class="metric-tag">Infrastructure</span>
+        <div class="metric-name">Technical failure rate</div>
+        <p class="metric-body">Of challenges initiated, what % fail due to technical error: timeouts, redirect failures, SDK issues? Track separately from abandonment.</p>
+      </div>
+      <div class="metric-card">
+        <span class="metric-tag">Actionable</span>
+        <div class="metric-name">Issuer-level success rate</div>
+        <p class="metric-body">Authentication success by individual issuer BIN. The most actionable signal. Almost no merchant currently tracks this.</p>
+      </div>
+      <div class="metric-card star" style="grid-column:1/-1;">
+        <span class="metric-tag">★ Revenue</span>
+        <div class="metric-name">Complete rate: the number you should be tracking</div>
+        <p class="metric-body">Successful transactions divided by all transaction attempts. The number that connects authentication directly to revenue.</p>
+      </div>
+    </div>
+    <div style="margin-bottom:12px;"><span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:var(--blue-light);border-radius:100px;padding:4px 12px;">Maturity Model</span></div>
+    <h3 style="margin-bottom:24px;">The authentication maturity model</h3>
+    <div class="maturity-steps">
+      <div class="maturity-step maturity-step-1">
+        <div class="ms-level">Level 1</div>
+        <div class="ms-name">Compliance Mode</div>
+        <div class="ms-desc">3DS broadly applied, all decisions left to the PSP. No exemption strategy.</div>
+        <div class="ms-stat">Challenge ~100%</div>
+      </div>
+      <div class="maturity-step maturity-step-2">
+        <div class="ms-level">Level 2</div>
+        <div class="ms-name">Exemption Aware</div>
+        <div class="ms-desc">Basic TRA and low-value exemptions in place. Not tailored to issuer behaviour.</div>
+        <div class="ms-stat">Challenge 40–60%</div>
+      </div>
+      <div class="maturity-step maturity-step-3">
+        <div class="ms-level">Level 3</div>
+        <div class="ms-name">Authentication Measurement</div>
+        <div class="ms-desc">KPIs tracked separately from conversion. Data exists but response is still reactive.</div>
+        <div class="ms-stat">Visibility improving</div>
+      </div>
+      <div class="maturity-step maturity-step-4">
+        <div class="ms-level">Level 4</div>
+        <div class="ms-name">Issuer Optimisation</div>
+        <div class="ms-desc">3DS flows optimised by issuer, device, geography. Dynamic exemptions. Real-time monitoring.</div>
+        <div class="ms-stat">Complete rate 85%+</div>
+      </div>
+      <div class="maturity-step maturity-step-5">
+        <div class="ms-level">Level 5 ★</div>
+        <div class="ms-name">Identity-Led Authentication</div>
+        <div class="ms-desc">Challenge decision based on how well the customer is known and how the issuer is likely to respond. Trusted customers are put forward for an exemption wherever eligible, rather than challenged by default. Issuer behaviour informs every exemption decision.</div>
+        <div class="ms-stat">Complete rate 90%+</div>
+      </div>
+    </div>
+    <div class="maturity-axis">
+      <span class="maturity-axis-label">Low maturity</span>
+      <div class="maturity-axis-line"></div>
+      <span class="maturity-axis-label">High maturity</span>
+    </div>
+    <p class="maturity-note">Most European merchants today sit between Level 1 and Level 2, compliance mode or exemption aware, but not yet optimising. The organisations recovering the most revenue operate at Levels 4 and 5. The model reflects organisational maturity as well as technical capability.</p>
+    <p class="maturity-note">Level 4 merchants are optimising the mechanics of authentication. Level 5 merchants have moved upstream: the question is not which authentication path to take, but whether this specific customer, given everything known about them, needs to be challenged at all.</p>
+    <p class="maturity-note">Most merchants who think they are at Level 4 or 5 are operating at Level 2 or 3. The difference is whether your decisions adapt in real time to issuer behaviour, not just customer history. If they do not, you are not as far up the ladder as you think.</p>
+    <div style="margin-top:40px;background:var(--blue-light);border-radius:16px;padding:32px 36px;margin-bottom:24px;width:100%;">
+      <h3 style="margin-bottom:8px;font-size:18px;">How this works in practice</h3>
+      <p style="color:var(--muted);font-size:15px;">Merchants do not need to become authentication experts. They set their risk tolerance (maximise revenue, manage chargeback liability, or balance both) and the decisioning layer adapts accordingly. The strategy adjusts dynamically to issuer behaviour, transaction context, and customer identity. What changes is not the merchant's risk appetite. What changes is the precision with which that appetite is applied.</p>
+    </div>
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:16px;padding:40px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;width:100%;">
+      <div>
+        <h3 style="margin-bottom:6px;">Take the Maturity Assessment</h3>
+        <p style="color:var(--muted);font-size:15px;">Use the Forter PSD2 Authentication Maturity Assessment to score your current level and calculate your estimated GMV recovery opportunity. It takes three minutes: forter.com/maturity-assessment</p>
+      </div>
+      <a href="https://avishek-chowdhury-forter.github.io/psd2assessment/" class="btn-pill-lg" style="white-space:nowrap;" target="_blank">Start the assessment →</a>
+    </div>
+  </div>
+</section>
+<!-- ═══ S8: PSD3 ═══ -->
+<section class="bg-ai" id="s8">
+  <div class="container">
+    <div class="section-opener">
+      <div class="section-kicker">
+        <span class="section-kicker-num">08</span>
+        <span class="section-kicker-line"></span>
+      </div>
+      <h2>Looking Ahead to PSD3</h2>
+      <p>What the next compliance cycle means for merchants who are already optimising</p>
+    </div>
+    <p style="color:var(--muted);margin-bottom:20px;">The final texts of PSD3 and the Payment Services Regulation were agreed in <strong style="color:var(--black);">April 2026</strong>, with most rules expected to apply across <strong style="color:var(--black);">2027–2028</strong>. They will introduce clearer SCA requirements, stronger fraud liability rules, and new provisions for mobile wallets and agentic commerce.</p>
+    <p style="color:var(--muted);">For merchants still operating at Level 1 or Level 2, this means another compliance cycle, and another round of conversion losses while they catch up. For merchants who have already built authentication optimisation as a discipline, PSD3 is not a disruption. It is a further advantage. The infrastructure, the issuer relationships, the measurement capability: all of it transfers. The work described in this report is not just about recovering revenue lost to PSD2 friction. It is about building the competency that makes the next regulatory cycle easier to absorb than the last one.</p>
+  </div>
+</section>
+<!-- ═══ CTA BANNER — 3 distinct step blocks ═══ -->
+<section class="cta-banner">
+  <div class="container">
+    <h2>Three steps to take to stay ahead of the curve</h2>
+   <div class="next-steps">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h3>Take the PSD2 Authentication Maturity Assessment (3 minutes)</h3>
+          <p>Score your current maturity level, see your estimated GMV recovery opportunity, and get specific guidance on how to advance.</p>
+        </div>
+        <div class="step-cta-wrap">
+          <a href="https://avishek-chowdhury-forter.github.io/psd2assessment/" class="btn-cta-white" target="_blank">Take the assessment →</a>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h3>Understand exactly where you are losing revenue</h3>
+          <p>A maturity score tells you where you are. A friction audit tells you why. Request a Payment Friction Audit to get an analyst-led benchmarking of your authentication performance, your complete rate, your issuer-level gaps by market, and a concrete revenue recovery opportunity against real merchant data. This is where the numbers become actionable.</p>
+        </div>
+        <div class="step-cta-wrap">
+          <a href="https://fortersta.wpengine.com/payment-friction-audit/" class="btn-cta-white" target="_blank">Book your Audit →</a>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h3>Build the capability for what comes next</h3>
+          <p>PSD3 is coming. The merchants who will adapt fastest are the ones building authentication as a discipline now, not in response to the next compliance deadline. The Payment Optimisation Summer School is a six-week programme on payment optimisation in the era of identity-based decisioning, delivered in partnership with Forter. Register now to secure your place.</p>
+        </div>
+        <div class="step-cta-wrap">
+          <button class="btn-cta-white" id="registerBtn">Register now →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="container">
+    <div class="footer-bottom">
+      Forter network data · ECB Report on Card Fraud 2020 and 2021 (ecb.europa.eu) · EBA/ECB Joint Report on Payment Fraud 2024 and 2025 (eba.europa.eu / ecb.europa.eu) · Commission Delegated Regulation (EU) 2018/389, RTS on SCA (EUR-Lex) · FCA Strong Customer Authentication guidance (fca.org.uk) · Stripe 3DS trends in regulated markets (stripe.com/blog/3ds-trends-in-regulated-markets) · Mastercard EMV 3DS programme data · Merchant Risk Council Global Payments and Fraud Reports 2024 and 2026 · Forter Real Cost of 3DS whitepaper · Forter case studies (ASOS, GetYourGuide and Priceline named with permission; further merchants anonymised) · Baymard Institute cart abandonment data (baymard.com) · European Parliament legislative tracking PSD3/PSR (europarl.europa.eu) · PSD3 and Payment Services Regulation final texts agreed April 2026 (eur-lex.europa.eu) · Banque de France / OSMP guidance on SCA exemptions and DTA, 2025 (banque-france.fr) · Carat/Fiserv false decline research · Citation note: where data originates from authentication benchmarking studies, Forter has cited the primary underlying source rather than any secondary aggregator. Competitor data has not been used as a primary source.
+    </div>
+  </div>
+</footer>
+<!-- ═══ REGISTER MODAL ═══ -->
+<div id="registerModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:16px; padding:40px; max-width:440px; width:90%; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <button onclick="document.getElementById('registerModal').style.display='none'" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:22px; cursor:pointer; color:#5a6478; line-height:1;">✕</button>
+    <h2 style="font-family:'Poppins',sans-serif; font-size:20px; font-weight:600; color:#0d0d0d; margin-bottom:8px; text-align:center;">Payment Optimisation Summer School</h2>
+    <p style="font-family:'Poppins',sans-serif; font-size:14px; color:#5a6478; margin-bottom:24px; line-height:1.6; text-align:center;">Enter your email to secure your place on the six-week programme.</p>
+    <!-- HubSpot form goes here -->
+    <form id="registerForm" onsubmit="handleRegister(event)">
+      <input type="email" id="registerEmail" placeholder="your@email.com" required
+        style="width:100%; padding:12px 16px; border:1px solid #e2e8f0; border-radius:8px; font-family:'Poppins',sans-serif; font-size:14px; margin-bottom:16px; outline:none; box-sizing:border-box;" />
+      <button type="submit"
+        style="width:100%; padding:13px; background:linear-gradient(135deg,#005de8,#2A8BFF); color:#fff; border:none; border-radius:8px; font-family:'Poppins',sans-serif; font-size:15px; font-weight:600; cursor:pointer;">
+        Register now →
+      </button>
+    </form>
+    <div id="registerSuccess" style="display:none; text-align:center; padding:16px 0;">
+      <p style="font-family:'Poppins',sans-serif; color:#005de8; font-weight:600;">You're registered! We'll be in touch.</p>
+    </div>
+  </div>
+</div>
+<script>
+  function handleRegister(e) {
+    e.preventDefault();
+    var email = document.getElementById('registerEmail').value;
+    fetch('https://api.hsforms.com/submissions/v3/integration/submit/2776164/97545298-514b-488d-9205-5ae8a0cbf958', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        fields: [{name: 'email', value: email}],
+        context: {pageUri: window.location.href, pageName: 'PSD2 Research Report'}
+      })
+    }).catch(function(err) { console.warn('HubSpot submission error:', err); });
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('registerSuccess').style.display = 'block';
+    setTimeout(() => { document.getElementById('registerModal').style.display = 'none'; document.getElementById('registerForm').style.display = 'block'; document.getElementById('registerSuccess').style.display = 'none'; document.getElementById('registerEmail').value = ''; }, 3000);
+  }
+  document.getElementById('registerModal').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
+  document.getElementById('registerBtn').addEventListener('click', function() { document.getElementById('registerModal').style.display = 'flex'; });
+</script>
+<script>
+  // ── SCROLL-SPY ──
+  const spySections = ['exec','s1','s2','s3','s4','s5','s6','s7','s8'];
+  const spyLinks = document.querySelectorAll('.nav-links a');
+  function updateSpy() {
+    let current = spySections[0];
+    spySections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && window.scrollY >= el.offsetTop - 100) current = id;
+    });
+    spyLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }
+  window.addEventListener('scroll', updateSpy, { passive: true });
+  updateSpy();
+  // ── HAMBURGER / DRAWER ──
+  const drawer = document.getElementById('navDrawer');
+  const hamburger = document.getElementById('hamburgerBtn');
+  const overlay = document.getElementById('drawerOverlay');
+  const closeBtn = document.getElementById('drawerClose');
+  hamburger && hamburger.addEventListener('click', () => drawer.classList.add('open'));
+  function closeDrawer() { drawer.classList.remove('open'); }
+  overlay && overlay.addEventListener('click', closeDrawer);
+  closeBtn && closeBtn.addEventListener('click', closeDrawer);
+</script>
+</body>
+</html>
