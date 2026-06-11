@@ -976,41 +976,31 @@
     <h3 style="margin-bottom:16px;">The metrics that matter</h3>
     <div class="metrics-grid">
       <div class="metric-card">
-        <span class="metric-tag">Volume</span>
-        <div class="metric-name">Challenge rate</div>
-        <p class="metric-body">What % of transactions are sent to 3DS challenge? High rates in markets and with issuers where challenge success is low compound the problem significantly.</p>
+        <span class="metric-tag">Authorisation</span>
+        <div class="metric-name">Auth rate</div>
+        <p class="metric-body">Of transactions submitted to the issuer for authorisation, what % are approved. The traditional benchmark, but it can look healthy while customers drop off upstream, before authorisation is ever requested.</p>
+      </div>
+      <div class="metric-card star">
+        <span class="metric-tag">&#9733; Revenue</span>
+        <div class="metric-name">Complete rate</div>
+        <p class="metric-body">Successful transactions divided by all transaction attempts. The number that connects authentication directly to revenue, and the one you should be tracking.</p>
       </div>
       <div class="metric-card">
-        <span class="metric-tag">Experience</span>
-        <div class="metric-name">Frictionless rate</div>
-        <p class="metric-body">Of transactions sent to 3DS, what % pass without a visible challenge? This is your most direct lever on the leak: every trusted customer you exempt is one who never reaches a challenge they might have abandoned. In Europe it is driven by your exemption strategy, not issuer goodwill.</p>
+        <span class="metric-tag">Exemptions</span>
+        <div class="metric-name">Successful exemption rate</div>
+        <p class="metric-body">Out of all your good transactions, what % you managed to successfully exempt from 3DS. Your most direct lever on the leak: every trusted customer you exempt never reaches a challenge they might have abandoned.</p>
         <div class="metric-highlight">Your biggest lever on the leak</div>
       </div>
       <div class="metric-card">
         <span class="metric-tag">Performance</span>
         <div class="metric-name">Authentication success rate</div>
-        <p class="metric-body">Of all 3DS challenges, what % succeed? Watch it by market and by issuer BIN. A sharp drop in any single market or issuer is the signal to investigate, far more than a blended average.</p>
+        <p class="metric-body">Of all 3DS challenges, what % succeed. Watch it by market and by issuer BIN; a sharp drop in any single one is the signal to investigate, not the blended average.</p>
         <div class="metric-highlight">Watch per-issuer, not blended</div>
       </div>
-      <div class="metric-card">
-        <span class="metric-tag">Experience</span>
-        <div class="metric-name">Challenge abandonment rate</div>
-        <p class="metric-body">Of challenges presented, what % do customers abandon? Isolate trusted traffic first: high abandonment among already-approved customers is a UX problem, while some abandonment on risky traffic is simply fraud dropping out.</p>
-      </div>
-      <div class="metric-card">
+      <div class="metric-card" style="grid-column:1/-1;">
         <span class="metric-tag">Infrastructure</span>
         <div class="metric-name">Technical failure rate</div>
-        <p class="metric-body">Of challenges initiated, what % fail due to technical error: timeouts, redirect failures, SDK issues? Track separately from abandonment.</p>
-      </div>
-      <div class="metric-card">
-        <span class="metric-tag">Actionable</span>
-        <div class="metric-name">Issuer-level success rate</div>
-        <p class="metric-body">Authentication success by individual issuer BIN. The most actionable signal. Almost no merchant currently tracks this.</p>
-      </div>
-      <div class="metric-card star" style="grid-column:1/-1;">
-        <span class="metric-tag">★ Revenue</span>
-        <div class="metric-name">Complete rate: the number you should be tracking</div>
-        <p class="metric-body">Successful transactions divided by all transaction attempts. The number that connects authentication directly to revenue.</p>
+        <p class="metric-body">Of challenges initiated, what % fail on technical errors: timeouts, redirect failures, SDK issues. Track it separately from abandonment, because the fixes are different.</p>
       </div>
     </div>
     <div style="margin-bottom:12px;"><span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:var(--blue-light);border-radius:100px;padding:4px 12px;">Maturity Model</span></div>
