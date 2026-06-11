@@ -743,8 +743,9 @@
     <p style="font-size:12px;color:var(--muted);margin-top:0;margin-bottom:56px;">Figures show Forter-approved (known-good) transactions that were sent to a 3DS challenge and then failed or were abandoned, combining customer abandonment and technical failure. Nearly 1 in 4 trusted customers are lost at the challenge in Germany and Austria; the UK loses fewer than 1 in 14. Source: Forter network data, June 2026. Forter-approved transactions, with non-representative marketplace feeds excluded. n≈723,000 approved challenged transactions.</p>
     <!-- ISSUER SPREAD — heading first, then chart in white box -->
     <h3 style="margin-bottom:12px;font-size:20px;">Even the strongest issuers leak trusted customers</h3>
-    <p style="color:var(--muted);margin-bottom:20px;">Country averages are only the starting point. The bars below break that same group of <strong style="color:var(--black);">Forter-approved, trusted customers</strong> down by issuer, so a weak number can't be blamed on fraud. And not one issuer comes out clean. Even the strongest bank in each market still loses a real share of customers it had already approved. Sabadell loses 17% in Spain, Intesa 20% in Italy, N26 21% in Germany. The weakest, Advanzia, loses a third. That makes it a systemic leak, not a handful of bad banks.</p>
-    <p style="color:var(--muted);margin-bottom:28px;">When issuers do differ, it comes down to infrastructure. In Germany, the digital banks N26 (78.5%) and DZ Bank (77.5%) beat the traditional networks Sparkassen (69.3%) and Advanzia (67.3%) by around <strong style="color:var(--black);">11 points</strong>. That gap is about how each bank built its 3DS flows, not how big it is. Italy and Spain are bunched more tightly, just 4 to 5 points between strongest and weakest, and that tells the same story. The leak reaches every issuer, and it only grows once riskier traffic is added back in.</p>
+    <p style="color:var(--muted);margin-bottom:20px;">Country averages are only the starting point. The bars below break that same group of <strong style="color:var(--black);">Forter-approved, trusted customers</strong> down by issuer, on the same drop-off metric as the market chart above, so a high number can't be blamed on fraud. And not one issuer comes out clean. Even the strongest bank in each market still loses a real share of customers it had already approved. Sabadell loses 17% in Spain, Intesa 20% in Italy, N26 21% in Germany. The weakest, Advanzia, loses a third. That makes it a systemic leak, not a handful of bad banks.</p>
+    <p style="color:var(--muted);margin-bottom:28px;">When issuers do differ, it comes down to infrastructure. In Germany, the digital banks N26 (21.5% drop-off) and DZ Bank (22.5%) leak far less than the traditional networks Sparkassen (30.7%) and Advanzia (32.7%), an <strong style="color:var(--black);">11-point</strong> gap. That gap is about how each bank built its 3DS flows, not how big it is. Italy and Spain are bunched more tightly, just 4 to 5 points between strongest and weakest, and that tells the same story. The leak reaches every issuer, and it only grows once riskier traffic is added back in.</p>
+    <p style="font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">Drop-off rate by issuer — % of trusted customers who fail or abandon the 3DS challenge (lower is better)</p>
     <div class="issuer-bars-wrap">
       <div class="issuer-country-block">
         <div class="icb-header">
@@ -753,10 +754,10 @@
           <span class="icb-spread">11pt spread</span>
         </div>
         <div class="icb-bars">
-          <div class="icb-row"><span class="icb-label">N26</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:78.5%"></div><span class="icb-pct">78.5%</span></div></div>
-          <div class="icb-row"><span class="icb-label">DZ Bank</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:77.5%"></div><span class="icb-pct">77.5%</span></div></div>
-          <div class="icb-row"><span class="icb-label">Sparkassen</span><div class="icb-bar-wrap"><div class="icb-bar red" style="width:69.3%"></div><span class="icb-pct">69.3%</span></div></div>
-          <div class="icb-row"><span class="icb-label">Advanzia</span><div class="icb-bar-wrap"><div class="icb-bar red" style="width:67.3%"></div><span class="icb-pct">67.3%</span></div></div>
+          <div class="icb-row"><span class="icb-label">N26</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:21.5%"></div><span class="icb-pct">21.5%</span></div></div>
+          <div class="icb-row"><span class="icb-label">DZ Bank</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:22.5%"></div><span class="icb-pct">22.5%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Sparkassen</span><div class="icb-bar-wrap"><div class="icb-bar red" style="width:30.7%"></div><span class="icb-pct">30.7%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Advanzia</span><div class="icb-bar-wrap"><div class="icb-bar red" style="width:32.7%"></div><span class="icb-pct">32.7%</span></div></div>
         </div>
       </div>
       <div class="issuer-country-block">
@@ -766,11 +767,11 @@
           <span class="icb-spread">5pt spread</span>
         </div>
         <div class="icb-bars">
-          <div class="icb-row"><span class="icb-label">Intesa Sanpaolo</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:79.8%"></div><span class="icb-pct">79.8%</span></div></div>
-          <div class="icb-row"><span class="icb-label">UniCredit</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:78.4%"></div><span class="icb-pct">78.4%</span></div></div>
-          <div class="icb-row"><span class="icb-label">Poste Italiane</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:77.5%"></div><span class="icb-pct">77.5%</span></div></div>
-          <div class="icb-row"><span class="icb-label">Nexi Payments</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:76.6%"></div><span class="icb-pct">76.6%</span></div></div>
-          <div class="icb-row"><span class="icb-label">Postepay</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:74.5%"></div><span class="icb-pct">74.5%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Intesa Sanpaolo</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:20.2%"></div><span class="icb-pct">20.2%</span></div></div>
+          <div class="icb-row"><span class="icb-label">UniCredit</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:21.6%"></div><span class="icb-pct">21.6%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Poste Italiane</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:22.5%"></div><span class="icb-pct">22.5%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Nexi Payments</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:23.4%"></div><span class="icb-pct">23.4%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Postepay</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:25.5%"></div><span class="icb-pct">25.5%</span></div></div>
         </div>
       </div>
       <div class="issuer-country-block">
@@ -780,16 +781,16 @@
           <span class="icb-spread">4pt spread</span>
         </div>
         <div class="icb-bars">
-          <div class="icb-row"><span class="icb-label">Banco Sabadell</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:83.0%"></div><span class="icb-pct">83.0%</span></div></div>
-          <div class="icb-row"><span class="icb-label">Santander ES</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:81.8%"></div><span class="icb-pct">81.8%</span></div></div>
-          <div class="icb-row"><span class="icb-label">BBVA</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:81.1%"></div><span class="icb-pct">81.1%</span></div></div>
-          <div class="icb-row"><span class="icb-label">Unnim Banc</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:80.3%"></div><span class="icb-pct">80.3%</span></div></div>
-          <div class="icb-row"><span class="icb-label">CaixaBank</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:79.0%"></div><span class="icb-pct">79.0%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Banco Sabadell</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:17.0%"></div><span class="icb-pct">17.0%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Santander ES</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:18.2%"></div><span class="icb-pct">18.2%</span></div></div>
+          <div class="icb-row"><span class="icb-label">BBVA</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:18.9%"></div><span class="icb-pct">18.9%</span></div></div>
+          <div class="icb-row"><span class="icb-label">Unnim Banc</span><div class="icb-bar-wrap"><div class="icb-bar green" style="width:19.7%"></div><span class="icb-pct">19.7%</span></div></div>
+          <div class="icb-row"><span class="icb-label">CaixaBank</span><div class="icb-bar-wrap"><div class="icb-bar blue" style="width:21.0%"></div><span class="icb-pct">21.0%</span></div></div>
         </div>
       </div>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-top:16px;margin-bottom:48px;">Source: Forter network data, June 2026. Forter-approved (trusted) segment, on the same basis as the market chart above (non-representative marketplace feeds excluded). DZ Bank combines both DZ entities. Green = 78%+. Blue = 70–78%. Red = below 70%.</p>
-    <p style="color:var(--muted);margin-bottom:48px;">The same leak widens on mobile. Across all major issuers in Forter's network, authentication success rates on mobile run 7-12 percentage points lower than on web. Crédit Agricole shows the largest gap: 70.8% on mobile versus 83.3% on web. Bank of Scotland runs at 75.8% versus 86.1%. This is not a customer behaviour problem. It is infrastructure.</p>
+    <p style="font-size:12px;color:var(--muted);margin-top:16px;margin-bottom:48px;">Source: Forter network data, June 2026. Forter-approved (trusted) segment, on the same basis as the market chart above (non-representative marketplace feeds excluded). DZ Bank combines both DZ entities. Drop-off = trusted customers who failed or abandoned the 3DS challenge. Green = under 20%. Blue = 20–30%. Red = 30%+.</p>
+    <p style="color:var(--muted);margin-bottom:48px;">The same leak widens on mobile. Across all major issuers in Forter's network, trusted customers drop off 7-12 percentage points more often on mobile than on web. Crédit Agricole shows the widest gap: 29% drop-off on mobile versus 17% on web. Bank of Scotland runs 24% versus 14%. This is not a customer behaviour problem. It is infrastructure.</p>
     <h3 style="margin-bottom:12px;font-size:20px;">Abandonment versus technical failure: two different fixes</h3>
     <p style="color:var(--muted);margin-bottom:16px;">The drop-off has two main causes a merchant can fix, and each needs a different response. It helps to see where the failures actually come from. Across Forter's network, most are issuer-side: <strong style="color:var(--black);">exemption rejection (27.8% of failures)</strong> and <strong style="color:var(--black);">issuer rejection (15.6%)</strong>, followed by <strong style="color:var(--black);">user abandonment (12.6%)</strong> and <strong style="color:var(--black);">technical failure (11.5%)</strong>. Abandonment and technical failure are close in size, but they call for completely different fixes, and the traditional German and Italian issuers like Sparkassen, Advanzia and Postepay tend to carry more of both.</p>
     <p style="color:var(--muted);margin-bottom:16px;">Technical failure is mostly a structural problem at traditional German and Italian issuers. Many still run redirect-based 3DS, which pushes the customer out of the merchant's checkout and onto a bank-hosted page. Those flows were built for desktop browsers, so on mobile, in in-app browsers, or on a weak signal, they break. UK issuers mostly designed this out, investing in SDK-based and app-to-app flows during their longer SCA rollout window.</p>
